@@ -1,0 +1,29 @@
+{
+  "pinyin_inputmethod": {
+    "message": "真文韵输入法"
+  },
+  "pinyin_setting_page": {
+    "message": "拼音设置"
+  },
+  "fuzzy_pinyin": {
+    "message": "模糊拼音"
+  },
+  "user_dict": {
+    "message": "用户字典"
+  },
+  "move_page_key_above": {
+    "message": "使用 - 和 = 键在选择页翻页"
+  },
+  "move_page_key_below": {
+    "message": "使用 , 和 . 键在选择页翻页"
+  },
+  "init_lang": {
+    "message": "首选中文输入"
+  },
+  "init_punc": {
+    "message": "首选全角符号"
+  },
+  "init_sbc": {
+    "message": "首选全角英文符号"
+  }
+}

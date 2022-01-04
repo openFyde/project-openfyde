@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Copyright (c) 2016-2018 The Flint OS Authors. All rights reserved.
+# Distributed under the terms of the GNU General Public License v2
+
+UI_MACHINE_INFO_FILE=/run/session_manager/machine-info
+
+get_serial() {
+	grep '"serial_number"' $UI_MACHINE_INFO_FILE | sed 's/"serial_number"=//g'| sed 's/"//g'| sed '/^$/d'
+}
+
+# serial number and echo group code.
+system_serial=$(get_serial)
+if [ ! -z "$system_serial" ]; then 
+	exit 0
+fi
+
+serial=$(flintsystem system_id)
+if [ ! -z "$serial" ]; then
+	/bin/echo -e "\n\"serial_number\"=\"${serial}\"" >> "${UI_MACHINE_INFO_FILE}"
+fi

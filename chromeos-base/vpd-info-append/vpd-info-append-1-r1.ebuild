@@ -1,0 +1,1 @@
+vpd-info-append-1.ebuild

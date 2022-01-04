@@ -1,0 +1,16 @@
+# Copyright (c) 2016-2018 The Flint OS Authors. All rights reserved.
+# Distributed under the terms of the GNU General Public License v2
+
+description   "Append machine information for session_manager"
+author        "yang@flintos.io"
+
+# This job collects machine information and places it in a file. It is
+# then pushed to session_manager by ui-init-late.
+
+# Start after the system is mostly up and running, which also implies
+# that the VPD has been read and the udev database is fully initialized.
+start on started system-services
+
+pre-start exec /usr/share/cros/init/ui-collect-machine-info
+exec /bin/sh /usr/share/cros/init/append_vpd_info
+

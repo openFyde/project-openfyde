@@ -1,0 +1,3 @@
+# We override the Chrome OS original stanza to run our command instead,
+# the original command is called by ours.
+pre-start exec /bin/sh /usr/share/cros/init/flint-write-machine-info

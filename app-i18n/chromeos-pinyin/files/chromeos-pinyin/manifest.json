@@ -1,0 +1,25 @@
+{
+  "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDSRMbBa14C/G45ow3CZvJlP7Nx3imrrj59+gWo7NzNdbtkQcne9HjTcmh3ALIHWtcDZ6fBiENBir9746MsgwC0h9yVg9BsgJJelLd7NV3hb6VXcPh9YFCKt6maLviENv1oApmMpY86wHifMiGr7WxR72T21V1RQQzetNTcQC3tvwIDAQAB",
+  "name": "Chrome OS IME (RIME)",
+  "version": "1.0.0.0",
+  "default_locale": "en",
+  "permissions": [
+    "input",
+    "unlimitedStorageshu"
+  ],
+  "background": {
+    "page": "backgroundpage.html"
+  },
+  "input_components": [
+    {
+    "name": "__MSG_INPUTMETHOD_RIME__",
+    "type": "ime",
+    "id": "zh-rime",
+    "description": "rime",
+    "language": ["zh", "zh-CN"],
+    "layouts": ["us"]
+    }
+  ],
+  "options_page": "option.html",
+  "manifest_version": 2
+}

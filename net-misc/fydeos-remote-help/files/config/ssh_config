@@ -1,0 +1,13 @@
+Host remote_help
+        HostName remote.fydeos.com
+        User fwd
+        Port 9022
+        IdentityFile /usr/share/remote-help/tunnelkey
+        UserKnownHostsFile /dev/null
+        StrictHostKeyChecking no
+        Compression yes
+        ServerAliveInterval 5
+        ServerAliveCountMax 5
+        ExitOnForwardFailure yes
+        RequestTTY no
+        ForwardX11 no

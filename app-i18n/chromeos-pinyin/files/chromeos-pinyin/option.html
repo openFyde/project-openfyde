@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <meta charset="utf-8"> 
+      <title>真文韵输入法设置页面</title>
+    </head>
+    <body>
+    <div>
+      <h1>真文韵输入法设置页面</h1>
+
+      <h2>选择输入法引擎</h2>
+      <div>
+        <input type="radio" id="luna_pinyin_simp" name="schema" value="luna_pinyin_simp">
+        <label for="">简体拼音</label>
+      </div>
+      <div>
+        <input type="radio" id="double_pinyin_flypy" name="schema" value="double_pinyin_flypy">
+        <label for="">小鹤双拼</label>
+      </div>
+      <div>
+        <input type="radio" id="luna_pinyin" name="schema" value="luna_pinyin">
+        <label for="">朙月拼音</label>
+      </div>
+      <div>
+        <input type="radio" id="double_pinyin" name="schema" value="double_pinyin">
+        <label for="">自然碼雙拼</label>
+      </div>
+      <br>
+    
+      <h2>设置单页候选词数量</h2>
+      <div>
+        <input type="number" id="pageSize" name="pageSize" value="10" min="3" max="10" style="width: 50px;">
+        <label for=""></label>
+      </div>
+
+      <br>
+
+      <h2>设置模糊音</h2>
+      <div>
+        <input type="checkbox" name="fuzzy" value="derive/^([zcs])h/$1/">
+        <label for="">zh, ch, sh => z, c, s</label>
+      </div>
+      <div>
+        <input type="checkbox" name="fuzzy" value="derive/^([zcs])([^h])/$1h$2/">
+        <label for="">z, c, s => zh, ch, sh</label>
+      </div>
+      <br>
+      <div>
+        <input type="checkbox" name="fuzzy" value="derive/^n/l/">
+        <label for="">n => l</label>
+      </div>
+      <div>
+        <input type="checkbox" name="fuzzy" value="derive/^l/n/">
+        <label for="">l => n</label>
+      </div>
+      <br>
+      <div>
+        <input type="checkbox" name="fuzzy" value="derive/([ei])n$/$1ng/">
+        <label for="">en => eng, in => ing</label>
+      </div>
+      <div>
+        <input type="checkbox" name="fuzzy" value="derive/([ei])ng$/$1n/">
+        <label for="">eng => en, ing => in</label>
+      </div>
+    </div>
+    <script type='text/javascript' src='option.js'></script> 
+    </body>
+    <footer style="position: fixed;bottom: 20px;text-align: center;width: 100%;">
+      <p>©FydeOS</p>
+    </footer>
+    <footer style="position: fixed;bottom: 0px">
+      <p>ver: 0.1.0</p>
+    </footer>
+</html>

@@ -1,0 +1,9 @@
+{
+  "external_update_url":"https://store.fydeos.com/update/iakadpgajjigiaojnbdmodlngmbkfhag/updates.xml",
+  "name": "FydeOS Android Settings",
+  "user_type": [
+   "unmanaged",
+   "managed",
+   "child"
+ ]
+}

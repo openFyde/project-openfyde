@@ -1,0 +1,1 @@
+fydeos-default-apps-1.0.0.ebuild

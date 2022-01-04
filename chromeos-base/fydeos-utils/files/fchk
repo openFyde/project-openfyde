@@ -1,0 +1,139 @@
+#!/bin/bash
+
+# Copyright 2020 The FydeOS Authors. All rights reserved.
+
+set -o errexit
+
+readonly LSB_RELEASE="/etc/lsb-release"
+readonly SCRIPT_BASE_URL="https://fydeos.com/misc-scripts/fchk"
+
+get_value() {
+  local key="$1"
+  grep "$key" "$LSB_RELEASE" | awk -F '=' '{print $2}'
+}
+
+os_board() {
+  get_value "CHROMEOS_RELEASE_BOARD"
+}
+
+fydeos_version() {
+  local str=""
+  str=$(get_value "CHROMEOS_RELEASE_BUILD_TYPE")
+  echo "${str##*Release Build}" | awk '{$1=$1;print}'
+}
+
+chromiumos_version() {
+  get_value "CHROMEOS_RELEASE_VERSION"
+}
+
+get_md5sum() {
+  local file="$1"
+  md5sum "$file" | awk '{print $1}'
+}
+
+validate() {
+  local file="$1"
+  local base_filename=""
+  local prefix=""
+  local timestamp=""
+  local md5sum=""
+
+  local now=0
+  local timediff=0
+  local real_md5sum=""
+
+  if [[ -z "$file" ]] || [[ ! -f "$file" ]]; then
+    return 1
+  fi
+
+  base_filename=$(basename "$file")
+
+  now=$(date +%s)
+  real_md5sum=$(get_md5sum "$file")
+
+  prefix=$(echo "$base_filename" | cut -d '_' -f1)
+  timestamp=$(echo "$base_filename" | cut -d '_' -f2)
+  md5sum=$(echo "$base_filename" | cut -d '_' -f3)
+
+  if [[ "$prefix" != "fydeos-fchk" ]]; then
+    return 2
+  fi
+  timediff=$((now - timestamp))
+  if [[ $timediff -gt 86400 ]]; then
+    return 3
+  fi
+
+  if [[ -z "$md5sum" ]] || [[ "$md5sum" != "$real_md5sum" ]]; then
+    return 4
+  fi
+
+  return 0
+}
+
+fetch_with_os_params() {
+  local output="$1"
+  local os_board=""
+  local fydeos_version=""
+  local chromiumos_version=""
+
+  os_board=$(os_board)
+  fydeos_version=$(fydeos_version)
+  chromiumos_version=$(chromiumos_version)
+  if [[ -z "$output" ]]; then
+    output="-"
+  fi
+  curl -Ss -G $SCRIPT_BASE_URL \
+    --data-urlencode "os_board=${os_board}" \
+    --data-urlencode "fydeos_version=${fydeos_version}" \
+    --data-urlencode "chromiumos_version=${chromiumos_version}" \
+    -o "$output"
+}
+
+fetch_and_save() {
+  file="/tmp/fydeos-fchk_$(date +%s)"
+  fetch_with_os_params "$file"
+  if [[ -f "$file" ]]; then
+    local md5sum
+    md5sum=$(get_md5sum "$file")
+    mv "$file" "${file}_${md5sum}"
+    echo "${file}_${md5sum}"
+  fi
+}
+
+find_local() {
+  local file=""
+  file=$(find /tmp -maxdepth 1 -type f -name "fydeos-fchk_*_*" -printf '%T@ %p\n' | sort -nr | head -n 1 | awk '{print $2}')
+  if [[ -f "$file" ]]; then
+    for f in /tmp/fydeos-fchk_*_*; do
+      if [[ -f "$f" ]] && [[ "$file" != "$f" ]]; then
+        rm "$f"
+      fi
+    done
+    echo "$file"
+  fi
+}
+
+main() {
+  local file=""
+
+  file=$(find_local)
+
+  if [[ -z "$file" ]] || ! validate "$file"; then
+    if [[ -f "$file" ]]; then
+      rm "$file"
+    fi
+    echo -e "Fetching fchk script from fydeos server...\n"
+    file=$(fetch_and_save)
+  fi
+
+  if [[ -f "$file" ]]; then
+    # shellcheck disable=SC2002
+    cat "$file" | bash -s -- "$@"
+  else
+    fetch_with_os_params | bash -s -- "$@"
+  fi
+
+  echo -e "\nAll done."
+}
+
+main "$@"

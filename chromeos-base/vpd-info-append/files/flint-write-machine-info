@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# This command is meant to be run by the machine-info upstart service, as some necessary
+# env. vars are set there, such as $MACHINE_INFO. It is NOT meant to be run as shell command.
+
+
+# Run the Chrome OS original command first
+sh /usr/share/cros/init/write-machine-info
+
+
+# Below are additional Flint OS specific bits
+
+# System serial number is set to nonchrome-<timestamp> on non-Google devices. We need to
+# change this as it is displayed in the Google Enterprise Enrollment Admin Console.
+# $MACHINE_INFO is set in /etc/init/machine-info.conf
+
+system_id=$(flintsystem system_id)
+if [ -n "$system_id" ]; then
+	line="serial_number=\"$system_id\""
+
+	if grep -q -s '^serial_number="nonchrome' $MACHINE_INFO; then
+		sed -e "s/^serial_number=.*$/$line/g" -i $MACHINE_INFO
+		logger -t "$UPSTART_JOB" "$MACHINE_INFO modified, serial number fixed."
+	elif ! grep -q -s '^serial_number=' $MACHINE_INFO; then
+		/bin/echo -e "\n$line" >> $MACHINE_INFO
+		logger -t "$UPSTART_JOB" "$MACHINE_INFO modified, serial number added."
+	else
+		logger -t "$UPSTART_JOB" "$MACHINE_INFO not modified, existing serial number looks good."
+	fi
+fi

@@ -1,0 +1,190 @@
+#!/bin/bash
+
+ARGV0="enable_libwidevine"
+WIDEVINE_VERSION="20211229"
+BASE_URL="https://packages.cdn.openfyde.cn/libwidevinecdm"
+LIBRARY_FILE_NAME="libwidevinecdm.so"
+TARGET_DIR="/opt/google/chrome"
+
+ARCH=""
+MILESTONE=""
+
+info() {
+  echo "info: $*"
+}
+
+error() {
+  echo "error: $*" >&2
+}
+
+die() {
+  error "$*"
+  exit 1
+}
+
+remount_writable() {
+  mount -o remount,rw /
+}
+
+remount_readonly() {
+  mount -o remount,ro /
+}
+
+get_milestone() {
+  local milestone=""
+  milestone=$(grep 'CHROMEOS_RELEASE_VERSION' /etc/lsb-release | \
+                    cut -d '=' -f2 | cut -d '.' -f1)
+  if [[ -z "$milestone" ]]; then
+    die "Could not determine milestone version"
+  fi
+
+  MILESTONE="$milestone"
+}
+
+full_url() {
+  echo "$BASE_URL/$ARCH/$WIDEVINE_VERSION/$LIBRARY_FILE_NAME?milestone=$MILESTONE"
+}
+
+is_arm() {
+  local arm_arch_list=(arm armv7l aarch64_be aarch64 armv8b armv8l)
+  for arch in "${arm_arch_list[@]}"; do
+    if [ "$arch" == "$1" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+get_arch() {
+  local arch=""
+  arch=$(uname -m)
+  if [[ "$arch" == "x86_64" ]]; then
+    ARCH="x86_64"
+  elif is_arm "$arch"; then
+    ARCH="arm"
+  else
+    die "Unsupported architecture: $arch"
+  fi
+}
+
+download() {
+  local url="$1"
+  local file_name="$2"
+  info "Downloading $file_name from $url"
+  curl -s -o "$file_name" "$url"
+}
+
+cleanup() {
+  local dir_to_clean="$1"
+  rm -fr "$dir_to_clean"
+
+  remount_readonly
+}
+
+install() {
+  info "Installing Widevine CDM"
+  local url=""
+  local tmp_dir=""
+  local file=""
+  url=$(full_url)
+  tmp_dir=$(mktemp -d /tmp/enable_widevine_XXXXXXX)
+  # shellcheck disable=SC2064
+  trap "cleanup $tmp_dir" EXIT SIGINT
+  file="$tmp_dir/$LIBRARY_FILE_NAME"
+
+  download "$url" "$file" || die "Couldn't download $LIBRARY_FILE_NAME"
+
+  remount_writable
+
+  mv "$file" "$TARGET_DIR/$LIBRARY_FILE_NAME"
+  chmod 755 "$TARGET_DIR/$LIBRARY_FILE_NAME"
+
+  info "Almost done, please reboot to enable Widevine CDM"
+}
+
+check_existence() {
+  local force="$1"
+  local file="$TARGET_DIR/$LIBRARY_FILE_NAME"
+  if [[ -f "$file" ]]; then
+    if [[ "$force" == "true" ]]; then
+      cp "$file" "${file}.old"
+    else
+      die "Widevine CDM is already installed, run this script with" \
+          "--force to reinstall"
+    fi
+  fi
+}
+
+disable_widevine() {
+  local file="$TARGET_DIR/$LIBRARY_FILE_NAME"
+  if [[ -f "$file" ]]; then
+    remount_writable
+    mv "$file" "${file}.old"
+    remount_readonly
+    info "Almost done, please reboot to disable Widevine CDM"
+  else
+    info "Widevine CDM is not installed, nothing to do"
+  fi
+}
+
+get_status() {
+  local file="$TARGET_DIR/$LIBRARY_FILE_NAME"
+  if [[ -f "$file" ]]; then
+    echo "yes"
+  else
+    echo "no"
+  fi
+}
+
+check_user() {
+  if [[ $EUID -ne 0 ]]; then
+    echo "Please run this script as root or prepend sudo, abort."
+    exit 1
+  fi
+}
+
+get_running_state() {
+  if pidof -o $$ -x "$ARGV0" >/dev/null; then
+    echo "yes"
+  else
+    echo "no"
+  fi
+}
+
+usage() {
+  echo "Usage: $ARGV0 [--force] [--status] [--disable] [[--state]]"
+  echo "  --force: Force reinstallation of Widevine CDM"
+  echo "  --status: Print current Widevine CDM status"
+  echo "  --disable: Disable Widevine CDM"
+  echo "  --state: Print running state of this script"
+}
+
+main() {
+  check_user
+
+  local argument="$1"
+  if [[ "$argument" == "--force" ]]; then
+    force="true"
+  elif [[ "$argument" == "--disable" ]]; then
+    disable_widevine
+    exit 0
+  elif [[ "$argument" == "--status" ]]; then
+    get_status
+    exit 0
+  elif [[ "$argument" == "--state" ]]; then
+    get_running_state
+    exit 0
+  elif [[ -n "$argument" ]]; then
+    usage
+    exit 1
+  fi
+
+  check_existence "$force"
+
+  get_arch
+  get_milestone
+
+  install
+}
+
+main "$@"

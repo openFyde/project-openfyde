@@ -1,0 +1,1 @@
+fydeos-stateful-updater-0.0.1.ebuild

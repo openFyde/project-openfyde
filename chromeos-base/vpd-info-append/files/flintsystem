@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# Copyright (c) 2016-2018 The Flint OS Authors. All rights reserved.
+# Distributed under the terms of the GNU General Public License v2
+
+OEM_PATH=/usr/share/oem
+STORED_MAC_FILE=$OEM_PATH/.vpd_info
+NET_NODE=/sys/class/net
+LAN_MAC_NODE=$NET_NODE/eth0/address
+WLAN_MAC_NODE=$NET_NODE/wlan0/address
+
+# Just continue if one of the commands below fails.
+#set +e
+
+get_system_mac(){
+	local mac
+
+	# On the first boot, the upstart service machine-info which will call this script starts so early
+	# that the NIC drivers may not even loaded, so it failed to get a mac address. This is to workaround
+	# that issue, by keep trying for about 1min until get one. This does not impact subsequential boots
+	# as the mac is stored.
+	local i=60
+	while (( i-- )); do
+		if [ -e $LAN_MAC_NODE ]; then
+			mac=$(cat $LAN_MAC_NODE)
+		elif [ -e $WLAN_MAC_NODE ]; then
+			mac=$(cat $WLAN_MAC_NODE)
+		else
+			mac=$(ifconfig -a | awk '/ether/ {print $2;exit}')
+		fi
+
+		if [ -n "$mac" ]; then
+			echo $mac
+			break
+		fi
+
+		[ -n "$UPSTART_JOB" ] && logger -t "$UPSTART_JOB" "Cannot get mac, maybe NIC driver is not ready yet, waiting to retry"
+		sleep 1s
+	done
+}
+
+remount_root_writable(){
+	mount -o remount rw /
+}
+
+remount_root_readonly(){
+	mount -o remount ro /
+}
+
+remount_oem_writable(){
+	mount -o remount,rw "$OEM_PATH"
+}
+
+remount_oem_readonly(){
+	mount -o remount,ro "$OEM_PATH"
+}
+
+store_mac(){
+	local mac=$1
+	local oem_mounted
+	if mount | grep -q $OEM_PATH; then
+		oem_mounted="oem_mounted"
+	fi
+	if [ ! -z "$mac" ]; then
+		if [ ! -z "$oem_mounted" ]; then
+			remount_oem_writable
+		else
+			remount_root_writable
+		fi
+		echo $mac > $STORED_MAC_FILE
+		chmod 400 $STORED_MAC_FILE
+		if [ ! -z "$oem_mounted" ]; then
+			remount_oem_readonly
+		else
+			remount_root_readonly
+		fi
+	fi
+}
+
+get_mac(){
+	if [ -e $STORED_MAC_FILE ]; then
+		cat $STORED_MAC_FILE
+	else
+		local mac=$(get_system_mac)
+		echo $mac
+		store_mac $mac
+	fi
+}
+
+get_system_id() {
+	system_id=$(get_mac | sed "s/://g")
+	echo $system_id
+}
+
+print_usage() {
+	echo "Usage: $0 <system info>
+
+Prints Flint OS specific system information.
+
+Current supported system info are:
+	system_id	- Print unique system identifier
+"
+}
+
+
+case $1 in
+	system_id)
+		get_system_id
+		;;
+	*)
+		print_usage
+		;;
+esac

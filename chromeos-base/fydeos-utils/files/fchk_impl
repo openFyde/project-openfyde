@@ -1,0 +1,714 @@
+#!/bin/bash
+
+# Copyright 2020 The FydeOS Authors. All rights reserved.
+
+readonly MY_NAME="fchk"
+readonly FEATURES=(vpd license shell_daemon crostini input_methods dualboot libwidevine policy android opengapps version chrome_dev)
+readonly FEATURE_PREFIX="check"
+readonly SUMMARY_RESULT_FILE="/tmp/fchk-summary.txt"
+
+readonly SUMMARY_RESULT_SUCCESS="ok"
+readonly SUMMARY_RESULT_SKIPPED="skipped"
+readonly SUMMARY_RESULT_FAILED="failed"
+
+VERBOSE="false"
+
+# Colors
+readonly end="\033[0m"
+readonly red="\033[0;31m"
+readonly yellow="\033[0;33m"
+readonly redb="\033[1;31m"
+readonly greenb="\033[1;32m"
+readonly whiteb="\033[1;37m"
+
+log_error() {
+  echo -e "${red}${1}${end}"
+}
+
+log_warning() {
+  echo -e "${yellow}${1}${end}"
+}
+
+log_verbose() {
+  [[ "$VERBOSE" = "true" ]] && echo -e "${1}"
+}
+
+log_info() {
+  echo -e "${1}"
+}
+
+log_failure() {
+  echo -e "${redb}${1}${end}"
+}
+
+log_success() {
+  echo -e "${greenb}${1}${end}"
+}
+
+title() {
+  echo -e "${whiteb}${1}${end}"
+}
+
+is_process_running() {
+  local process="$1"
+  if [[ -z "$process" ]]; then
+    return 1
+  fi
+  pgrep "$process" > /dev/null 2>&1
+}
+
+is_file_exists() {
+  local file="$1"
+  [[ -n "$file" ]] && [[ -f "$file" ]]
+}
+
+is_file_non_empty() {
+  local file="$1"
+  [[ -n "$file" ]] && [[ -s "$file" ]]
+}
+
+is_dir_exists() {
+  local dir="$1"
+  [[ -n "$dir" ]] && [[ -d "$dir" ]]
+}
+
+is_non_empty_output() {
+  local output="$1"
+  [[ -n "$output" ]]
+}
+
+is_command_exists() {
+  local name="$1"
+  if [[ -z "$name" ]]; then
+    return 1
+  fi
+  command -v "$1" > /dev/null 2>&1
+}
+
+log_file_notfound_or_empty() {
+  local file="$1"
+  log_error "$file does not exist or is empty"
+}
+
+log_if_no_file() {
+  local file="$1"
+  if ! is_file_non_empty "$file"; then
+    log_file_notfound_or_empty "$file"
+    return 1
+  fi
+  return 0
+}
+
+feature_name() {
+  local function="$1"
+  echo "${function##*$FEATURE_PREFIX_}"
+}
+
+is_non_root() {
+  [[ ! $EUID -eq 0 ]]
+}
+
+os_board() {
+  if [[ -f "/etc/lsb-release" ]]; then
+    grep 'CHROMEOS_RELEASE_BOARD' /etc/lsb-release | awk -F '=' '{print $2}'
+  fi
+}
+
+check_vpd() {
+  is_non_root && return 255
+  local command="vpd"
+  local fullcommand="vpd -i RW_VPD -l"
+  local oem_license="/usr/share/oem/.oem_licence"
+  local output=""
+  local ret=0
+
+  if ! is_command_exists "$command"; then
+    log_error "command vpd does not exist"
+    return 1
+  fi
+  log_verbose "command vpd exists"
+
+  if ! log_if_no_file "$oem_license"; then
+    return 1
+  fi
+  log_verbose "$oem_license is valid"
+
+  output=$($fullcommand 2>/dev/null)
+  ret=$?
+  if [[ ! $ret -eq 0 ]]; then
+    log_error "command '$fullcommand' error code $ret"
+    return 1
+  fi
+
+  # if ! is_non_empty_output "$(feature_name "${FUNCNAME[0]}")" "$output"; then
+  if ! is_non_empty_output "$output"; then
+    log_error "command vpd output empty string"
+    return 1
+  fi
+  log_verbose "vpd command output seems fine"
+
+  return 0
+}
+
+check_shell_daemon() {
+  local daemon_file="/usr/share/fydeos_shell/shell_daemon"
+  if ! log_if_no_file "$daemon_file"; then
+    return 1
+  fi
+  if  [[ ! -x "$daemon_file" ]]; then
+    log_error "$daemon_file has no executable permission"
+    return 1
+  fi
+  log_verbose "$daemon_file is valid"
+
+  local dbus_conf="/etc/dbus-1/system.d/io.fydeos.ShellDaemon.conf"
+  if ! log_if_no_file "$dbus_conf"; then
+    return 1
+  fi
+  log_verbose "$dbus_conf is valid"
+
+  local process="shell_daemon"
+  if ! is_process_running "$process"; then
+    log_error "$process is not running"
+    return 1
+  fi
+  log_verbose "$process is running"
+
+  return 0
+}
+
+check_crostini() {
+  local arch=""
+  arch=$(uname -m)
+
+  local base_dir=""
+
+  if [[ "$arch" = "x86_64" ]]; then
+    base_dir="/mnt/stateful_partition/dev_image/tatl-fydeos"
+  elif [[ "arm" == *"$arch"* ]] || [[ "$arch" = "aarch64" ]]; then
+    base_dir="/mnt/stateful_partition/dev_image/tael-fydeos"
+  else
+    log_warning "can not check crostini for arch $arch"
+    return 254
+  fi
+  if ! is_dir_exists "$base_dir"; then
+    log_error "$base_dir does not exist"
+    return 1
+  fi
+  local files=(
+    "$base_dir/lsb-release"
+    "$base_dir/vm_rootfs.img"
+    "$base_dir/vm_tools.img"
+    "$base_dir/vm_kernel"
+  )
+  for file in "${files[@]}"; do
+    if ! log_if_no_file "$file"; then
+      return 1
+    fi
+  done
+
+  return 0
+}
+
+check_input_methods() {
+  local dir="/usr/share/chromeos-assets/input_methods"
+  if ! is_dir_exists "$dir"; then
+    log_error "$dir does not exist"
+    return 1
+  fi
+  if ! log_if_no_file "$dir/input_methods.txt"; then
+    return 1
+  fi
+  local tools_dir="$dir/input_tools"
+  if ! is_dir_exists "$tools_dir"; then
+    log_error "$tools_dir does not exist"
+    return 1
+  fi
+  local manifest="$tools_dir/manifest.json"
+  if ! log_if_no_file "$manifest"; then
+    return 1
+  fi
+  log_verbose "$manifest exists"
+
+  local engine_config="$tools_dir/engine.config"
+  if ! log_if_no_file "$engine_config"; then
+    return 1
+  fi
+  log_verbose "$engine_config exists"
+
+  log_verbose "$dir seems fine"
+
+  return 0
+}
+
+check_dualboot() {
+  local arch=""
+  arch=$(uname -m)
+  if [[ "$arch" != "x86_64" ]]; then
+    log_verbose "skip dualboot checking for arch $arch"
+    return 254
+  fi
+  local skip_board=(link_fydeos)
+  local board=""
+  board=$(os_board)
+  if [[ -z $board ]]; then
+    log_warning "cannot get board name"
+  else
+    if array_contains "$board" "${skip_board[@]}"; then
+      log_verbose "skip dualboot checking for board $board"
+      return 254
+    fi
+  fi
+
+
+  local dir="/usr/share/dualboot"
+  if ! is_dir_exists "$dir"; then
+    log_error "$dir does not exist"
+    return 1
+  fi
+  local files=(
+    BOOT.CSV
+    chromeos-install.sh
+    fydeos_util.sh fydeos_util_wrapper.sh
+    install_fydeos_loader.sh install_kernel.sh install_refind.sh
+    initrd/core_util_ramfs.cpio.xz initrd/dual_boot_ramfs.cpio.xz
+    fydeos/bootx64.efi fydeos/grub.cfg.tpl fydeos/os_fydeos.png
+  )
+  local file=""
+  for name in "${files[@]}"; do
+    file="$dir/$name"
+    if ! log_if_no_file "$file"; then
+      return 1
+    fi
+  done
+
+  log_verbose "dualboot scripts and files exist"
+
+  if ! is_dir_exists "$dir/refind"; then
+    log_error "$dir/refind does not exist"
+    return 1
+  fi
+
+  local refind_fydeos_file_exists="false"
+  for f in "$dir"/refind/refind-*-fydeos.tar.xz; do
+    if [[ -f "$f" ]]; then
+      refind_fydeos_file_exists="true"
+      log_verbose "$f exists"
+      break
+    fi
+  done
+  if [[ "$refind_fydeos_file_exists" = "false" ]]; then
+    log_error "refind-bin-x.x.x-fydeos.tar.gz does not exist"
+    return 1
+  fi
+
+  if ! is_dir_exists "$dir/refind/rEFInd-minimal"; then
+    log_error "$dir/refind/rEFInd-minimal does not exist"
+    return 1
+  fi
+
+  log_verbose "$dir/refind/rEFInd-minimal exists"
+
+  return 0
+}
+
+check_license() {
+  is_non_root && return 255
+  local util="/usr/share/fydeos_shell/license-utils.sh"
+  if ! log_if_no_file "$util"; then
+    return 1
+  fi
+  if [[ ! -x "$util" ]]; then
+    log_error "$util has no executable permission"
+    return 1
+  fi
+  local id=""
+  id="$("$util" id)"
+  if ! is_non_empty_output "$id"; then
+    log_error "$util get device id failed"
+    return 1
+  fi
+  log_verbose "device id: $id"
+
+  return 0
+}
+
+check_libwidevine() {
+  local lib_file="/opt/google/chrome/libwidevinecdm.so"
+  if ! log_if_no_file "$lib_file"; then
+    return 1
+  fi
+
+  log_verbose "$lib_file exists"
+  return 0
+}
+
+check_policy() {
+  local file="/etc/chromium/policies/managed/fydeos.json"
+  if ! log_if_no_file "$file"; then
+    return 1
+  fi
+
+  local jq_output=""
+  local jq_return=0
+  if ! is_command_exists jq; then
+    log_warning "$file exists, but jq does not exist, unable to verify content of it"
+    return 0
+  else
+    jq_output=$(jq empty "$file" 2>&1)
+    jq_return=$?
+    if [[ ! "$jq_return" -eq 0 ]]; then
+      log_error "$file is not a valid json file, $jq_output"
+      return 1
+    fi
+  fi
+
+  local force_list_length=0
+  force_list_length=$(jq '.ExtensionInstallForcelist | length' "$file")
+  if [[ "$force_list_length" -eq 0 ]]; then
+    log_error "no extensions in ExtensionInstallForcelist"
+    return 1
+  fi
+  log_verbose "$force_list_length items in ExtensionInstallForcelist"
+
+  local all_keys=""
+  all_keys=$(jq 'keys' "$file")
+  log_verbose "policy items:\n$all_keys"
+
+  log_verbose "$file seems fine"
+  return 0
+}
+
+check_opengapps() {
+  local arch=""
+  arch=$(uname -m)
+  local base_path="/usr/share/fydeos_shell/arc-rec"
+  local arc_rec_file=""
+  if [[ "$arch" = "x86_64" ]]; then
+    arc_rec_file="$base_path/arc-rec-x86_64.tar.gz"
+  else
+    arc_rec_file="$base_path/arc-rec-arm64.tar.gz"
+  fi
+  local install_script="$base_path/installer.sh"
+  local after_hook_script="$base_path/after_hook.sh"
+
+  if ! log_if_no_file "$arc_rec_file"; then
+    return 1
+  fi
+
+  if ! log_if_no_file "$install_script"; then
+    return 1
+  fi
+
+  if ! log_if_no_file "$after_hook_script"; then
+    return 1
+  fi
+
+  log_verbose "fallback files that opengapps may need are located in $base_path"
+  return 0
+}
+
+get_linux_release_file() {
+  echo "$file"
+}
+
+check_version_impl() {
+  local type="$1"
+  local file="$2"
+  local fydeos_version_key="CHROMEOS_RELEASE_BUILD_TYPE"
+  local chromeos_version_key="CHROMEOS_RELEASE_VERSION"
+  local fydeos_version=""
+  local chromeos_version=""
+  if [[ -z "$file" ]]; then
+    return 1
+  fi
+  local prefix="check version of [$type],"
+  fydeos_version=$(grep "$fydeos_version_key" "$file" 2>/dev/null | awk -F '=' '{print $2}')
+  if [[ -z "$fydeos_version" ]]; then
+    log_error "$prefix can not get fydeos release version number"
+    return 1
+  fi
+  chromeos_version=$(grep "$chromeos_version_key" "$file" 2>/dev/null | awk -F '=' '{print $2}')
+  if [[ -z "$chromeos_version" ]]; then
+    log_error "$prefix can not get chromiumos release version number"
+    return 1
+  fi
+
+  log_info "$type"
+  log_info "    FydeOS      -    $fydeos_version"
+  log_info "    Platform    -    $chromeos_version"
+
+  if [[ $type = "Linux subsystem" ]]; then
+    if [[ $fydeos_version != "Release Build v"* ]] && [[ $fydeos_version != "Test Build"* ]]; then
+      log_warning "$prefix the format of fydeos version is incorrect"
+      return 1
+    fi
+  else
+    if [[ $fydeos_version != "Release Build v"* ]]; then
+      log_warning "$prefix the format of fydeos version is incorrect"
+      return 1
+    fi
+  fi
+
+  return 0
+}
+
+check_linux_subsystem_version() {
+  local file=""
+  local arch=""
+  arch=$(uname -m)
+  if [[ "$arch" = "x86_64" ]]; then
+    file="/mnt/stateful_partition/dev_image/tatl-fydeos/lsb-release"
+  elif [[ "arm" == *"$arch"* ]] || [[ "$arch" = "aarch64" ]]; then
+    file="/mnt/stateful_partition/dev_image/tael-fydeos/lsb-release"
+  else
+    log_warning "can not check version linux subsystem for arch $arch"
+    return 1
+  fi
+  check_version_impl "Linux subsystem" "$file"
+}
+
+check_os_version() {
+  check_version_impl "OS" "/etc/lsb-release"
+}
+
+check_version() {
+  check_os_version && check_linux_subsystem_version
+}
+
+check_android_build_prop() {
+  local build_prop="/opt/google/containers/android/rootfs/root/system/build.prop"
+
+  if ! log_if_no_file "$build_prop"; then
+    return 1
+  fi
+
+  local expected_brand="ro.product.brand=fydeos"
+  local expected_model="ro.product.model=Android Subsystem"
+  local expected_board="ro.product.board=fydeos"
+  local expected_manufacturer="ro.product.manufacturer=FydeOS"
+
+  local expected=("$expected_brand" "$expected_model" "$expected_board" "$expected_manufacturer")
+  local key=""
+  local expected_value=""
+  local real_value=""
+  local success=0
+  for pair in "${expected[@]}"; do
+    key="$(echo "$pair" | awk -F '=' '{print $1}')"
+    expected_value="$(echo "$pair" | awk -F '=' '{print $2}')"
+    real_value=$(grep "$key" "$build_prop" | awk -F '=' '{print $2}')
+    if [[ "$real_value" = "$expected_value" ]]; then
+      log_verbose "$pair"
+    else
+      log_warning "$key expected [ \"$expected_value\" ], but it's [ \"$real_value\" ]"
+      success=1
+    fi
+  done
+
+  return $success
+}
+
+check_android() {
+  local config_file="/opt/google/containers/android/config.json"
+  local sys_img="/opt/google/containers/android/system.raw.img"
+  local vendor_img="/opt/google/containers/android/vendor.raw.img"
+  if ! log_if_no_file "$config_file"; then
+    return 1
+  fi
+  if ! log_if_no_file "$sys_img"; then
+    return 1
+  fi
+  if ! log_if_no_file "$vendor_img"; then
+    return 1
+  fi
+
+  # log_verbose "android subsystem img files seem fine."
+
+  # if is_non_root; then
+  #   log_warning "non root, unable to check android buile.prop"
+  # else
+  #   if ! check_android_build_prop; then
+  #     return 1
+  #   fi
+  # fi
+
+  log_verbose "android subsystem seems fine"
+
+  return 0
+}
+
+check_chrome_dev() {
+  local file="/etc/chrome_dev.conf"
+  if ! log_if_no_file "$file"; then
+    return 1
+  fi
+
+  local content=""
+  content=$(grep -Ev "^\s*(#|$)" "$file" 2>/dev/null)
+  if [[ -n "$content" ]]; then
+    log_verbose "chrome_dev.conf content"
+    log_verbose "$content"
+  else
+    log_warning "chrome_dev.conf has no valid arguments"
+    return 1
+  fi
+
+  return 0
+}
+
+check_wrapper() {
+  local function="$1"
+  local summary="$2"
+  local ret_code
+  if [[ -z "$function" ]]; then
+    return
+  fi
+  title "==  $function  =="
+  if ${FEATURE_PREFIX}_"${function}"; then
+    log_success "\n$function test succeeded"
+    if [[ "$summary" = "true" ]]; then
+      log_summary "$function" "$SUMMARY_RESULT_SUCCESS"
+    fi
+  else
+    ret_code=$?
+    if [[ $ret_code -eq 255 ]]; then
+      log_warning "\nnon root, skip the testing of the [$function] feature"
+      if [[ "$summary" = "true" ]]; then
+        log_summary "$function" "$SUMMARY_RESULT_SKIPPED"
+      fi
+    elif [[ $ret_code -eq 254 ]]; then
+      log_warning "\n$function test skipped"
+      if [[ "$summary" = "true" ]]; then
+        log_summary "$function" "$SUMMARY_RESULT_SKIPPED"
+      fi
+    else
+      log_failure "\n$function test failed"
+      if [[ "$summary" = "true" ]]; then
+        log_summary "$function" "$SUMMARY_RESULT_FAILED"
+      fi
+    fi
+  fi
+  printf "\n\n"
+}
+
+array_contains() {
+  local seeking=$1; shift
+  local in=1
+  for element; do
+    if [[ $element == "$seeking" ]]; then
+      in=0
+      break
+    fi
+  done
+  return $in
+}
+
+check_supported_feature() {
+  local feature="$1"
+  if [[ -z "$feature" ]]; then
+    return 1
+  fi
+  array_contains "$feature" "${FEATURES[@]}"
+}
+
+clear_summary() {
+  cat /dev/null > "$SUMMARY_RESULT_FILE"
+}
+
+output_summary() {
+  if [[ -s "$SUMMARY_RESULT_FILE" ]]; then
+    printf "\n================================\n"
+
+    cat "$SUMMARY_RESULT_FILE"
+  fi
+  rm "$SUMMARY_RESULT_FILE"
+}
+
+log_summary() {
+  local name="$1"
+  local result="$2"
+  if [[ -n "$name" ]] && [[ -n "$result" ]]; then
+    printf "%-16s%16s\n" "$name" "$result" >> "$SUMMARY_RESULT_FILE"
+  fi
+}
+
+check_all() {
+  local summary="true"
+  for feature in "${FEATURES[@]}"; do
+    check_wrapper "$feature" "$summary"
+  done
+}
+
+list() {
+  for feature in "${FEATURES[@]}"; do
+    echo "$feature"
+  done
+}
+
+usage() {
+  local usage="usage:
+  $MY_NAME [check] [all] [verbose | -v]          verify all features
+  $MY_NAME check [feature] [verbose | -v]        verify specified feature
+  $MY_NAME list                                  list all features that can be verified
+  $MY_NAME help                                  print this message
+  "
+  echo "$usage"
+}
+
+main() {
+  local command=""
+  local command_argument=""
+
+  if [[ "$#" -eq 0 ]]; then
+    command="check"
+    command_argument="all"
+  elif [[ "$#" -eq 1 ]]; then
+    if [[ "$1" = "verbose" || "$1" = "-v" ]]; then
+      command="check"
+      command_argument="all"
+      VERBOSE="true"
+    elif [[ "$1" = "check" ]]; then
+      command="check"
+      command_argument="all"
+    else
+      command="$1"
+    fi
+  elif [[ "$#" -eq 2 ]]; then
+    command="$1"
+    if [[ "$command" = "check" ]] && [[ "$2" = "verbose" || "$2" = "-v" ]]; then
+      command_argument="all"
+      VERBOSE="true"
+    else
+      command_argument="$2"
+    fi
+  elif [[ "$#" -eq 3 ]]; then
+    command="$1"
+    command_argument="$2"
+    if [[ "$command" = "check" ]] && [[ "$3" = "verbose" || "$3" = "-v" ]]; then
+      VERBOSE="true"
+    fi
+  fi
+
+  if [[ "$command" = "check" ]]; then
+    if [[ $command_argument = "all" ]]; then
+      clear_summary
+      check_all "$summary"
+      output_summary
+    elif check_supported_feature "$command_argument"; then
+      check_wrapper "$command_argument"
+    else
+      echo "invalid feature name $command_argument"
+      echo "run '$MY_NAME list' to see supported feature names"
+      exit 1
+    fi
+  elif [[ "$command" = "list" ]]; then
+    list
+  elif [[ "$command" = "help" ]] || [[ "$command" = "--help" ]] || [[ "$command" = "-h" ]]; then
+    usage
+  else
+    echo "invalid subcommand $command"
+    usage
+  fi
+}
+
+main "$@"

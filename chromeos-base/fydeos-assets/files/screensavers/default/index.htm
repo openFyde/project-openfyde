@@ -1,0 +1,120 @@
+
+<!-- saved from url=(0061)http://www.cs.virginia.edu/~kkk5z/screensavers/chromiumOS.htm -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script type="text/javascript">
+var heading = null;
+var width = window.innerWidth;
+var height = window.innerHeight;
+
+
+function moveText(milliseconds) {
+ window.setInterval("changePosition()", milliseconds)
+}
+
+function changePosition() {
+ // first
+  var x = Math.random()*(width-350);
+  var y = Math.random()*(height-150);
+
+  if(document.getElementById){
+    heading = document.getElementById("moveme");
+  }
+  else if(document.layers){
+    heading = document.layers["moveme"];
+  } 
+  if(heading != null) {
+    var imageHeight = heading.height;
+    var imageWidth = heading.width;
+    heading.style.posLeft = x;
+    heading.style.posTop = y;
+  }
+  
+  
+  +FadeIn("moveme");
+  setTimeout("FadeOut(" + '"moveme"'+ ")",5000);
+ 
+ 
+}
+
+function SetOpacity(object,opacityPct)
+{
+  // IE.
+  object.style.filter = 'alpha(opacity=' + opacityPct + ')';
+  // Old mozilla and firefox
+  object.style.MozOpacity = opacityPct/100;
+  // Everything else.
+  object.style.opacity = opacityPct/100;
+}
+function ChangeOpacity(id,msDuration,msStart,fromO,toO)
+{
+  var element=document.getElementById(id);
+  element.style.visibility="visible";
+  var opacity = element.style.opacity * 100;
+  var msNow = (new Date()).getTime();
+  opacity = fromO + (toO - fromO) * (msNow - msStart) / msDuration;
+  if (opacity<0) 
+    SetOpacity(element,0)
+  else if (opacity>100)
+    SetOpacity(element,100)
+  else
+  {
+    SetOpacity(element,opacity);
+    element.timer = window.setTimeout("ChangeOpacity('" + id + "'," + msDuration + "," + msStart + "," + fromO + "," + toO + ")",1);
+  }
+}
+
+
+function FadeIn(id)
+{
+  var element=document.getElementById(id);
+  if (element.timer) window.clearTimeout(element.timer); 
+  var startMS = (new Date()).getTime();
+  element.timer = window.setTimeout("ChangeOpacity('" + id + "',4000," + startMS + ",0,100)",1);
+}
+
+
+function FadeOut(id)
+{
+  var element=document.getElementById(id);
+  if (element.timer) window.clearTimeout(element.timer); 
+  var startMS = (new Date()).getTime();
+  element.timer = window.setTimeout("ChangeOpacity('" + id + "',4000," + startMS + ",100,0)",1);
+}
+
+
+function random(a, b) {
+  var r = Math.random();
+  if (a instanceof Array) {
+    var i = Math.floor(r*a.length);
+    return a[i];
+  } else if (b == undefined) {
+    return r*a;
+  } else { 
+    return r*(a+b)-a;
+  }
+}
+
+
+</script>
+
+<style type="text/css"> 
+* { 
+margin: 0;
+padding: 0;
+}
+html, body { 
+width: 100%;
+background-color: #F6F6F6;
+height: 100%;
+}
+</style> 
+
+</head>
+<body onload="changePosition();moveText(10000)">
+<div id="moveme" style="position: absolute; left: 862.429px; top: 3.65261px; visibility: visible; opacity: 0; ">
+<img src="logo.png">
+</div>
+
+
+
+</body></html>
