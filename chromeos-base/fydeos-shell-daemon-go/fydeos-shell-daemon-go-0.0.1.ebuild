@@ -4,7 +4,7 @@
 EAPI="6"
 
 
-EGIT_REPO_URI="git@gitlab.fydeos.xyz:cockpit/fydeos-shell-daemon-go.git"
+EGIT_REPO_URI="${FYDEOS_GIT_HOST_BASE_URL}/fydeos-shell-daemon-go.git"
 EGIT_BRANCH="r96"
 
 inherit git-r3 golang-build

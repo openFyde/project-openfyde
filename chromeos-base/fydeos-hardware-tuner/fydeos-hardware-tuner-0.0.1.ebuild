@@ -3,7 +3,7 @@
 
 EAPI="5"
 
-EGIT_REPO_URI="git@gitlab.fydeos.xyz:misc/fydeos_hardware_tuning.git"
+EGIT_REPO_URI="${FYDEOS_GIT_HOST_BASE_URL}/fydeos_hardware_tuning.git"
 EGIT_BRANCH="r96-dev"
 
 inherit git-r3
