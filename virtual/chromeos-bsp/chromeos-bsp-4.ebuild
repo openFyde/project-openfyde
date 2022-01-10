@@ -29,7 +29,6 @@ RDEPEND="
     chromeos-base/fydeos-dev-remote-patch
     chromeos-base/fydeos-stateful-updater
     chromeos-base/fydeos_power_wash
-    chromeos-base/license-utils
     chromeos-base/google-drive-fs
     chromeos-base/fydeos-opengapps-scripts
     chromeos-base/fydeos-utils
