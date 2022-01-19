@@ -32,4 +32,7 @@ src_install() {
 	
 	insinto /usr/share/chromeos-assets/wallpaper
 	doins -r "${FILESDIR}"/wallpaper/*
+
+	insinto /usr/share/chromeos-assets/fydeos_wallpapers
+	doins -r "${FILESDIR}"/fydeos_wallpapers/*
 }
