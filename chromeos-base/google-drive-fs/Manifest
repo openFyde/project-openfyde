@@ -1,5 +1,2 @@
-DIST google-drive-fs-amd64-83.0.0.0.tar.gz 7923465 MD5 5cd4e32b54a14174c86bdab46ff30034
-DIST google-drive-fs-amd64-86.0.0.0.tar.gz 5947357 MD5 1ffa1587b9ef8aab4d9d059e2218d5f1
-DIST google-drive-fs-arm-86.0.0.0.tar.gz 4177671 MD5 83fc8724f4223f6c5099aa965a8d50be
-DIST google-drive-fs-amd64-92.0.0.0.tar.gz 5676280 MD5 0fd79e642dfcdabc132d44b2b9dd828d
-DIST google-drive-fs-arm-92.0.0.0.tar.gz 4742813 MD5 cf71c454003564df322acbaa44a66ba7
+DIST google-drive-fs-amd64-96.0.0.0.tar.gz 5090655 MD5 f60bd3c5cc0ebed4e1ff664d931ce5b8
+DIST google-drive-fs-arm-96.0.0.0.tar.gz 5547493 MD5 bff2f96795feb9767f1189d4c9fde7df

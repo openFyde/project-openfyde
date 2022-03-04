@@ -10,7 +10,7 @@ HOMEPAGE="http://fydeos.com"
 
 LICENSE="BSD-Google"
 SLOT="0"
-KEYWORDS="amd64 arm arm64"
+KEYWORDS="amd64 arm"
 IUSE=""
 
 RDEPEND=""
@@ -20,12 +20,7 @@ DEPEND="${RDEPEND}"
 src_install() {
   exeinto /opt/google/drive-file-stream
   doexe drive-file-stream/drivefs
-
   if use amd64; then
-    exeinto /opt/google/drive-file-stream/bin
-    doexe drive-file-stream/bin/drivefs
-
-    exeinto /opt/google/drive-file-stream/lib
-    doexe drive-file-stream/lib/*
+    doexe drive-file-stream/libfuse.so
   fi
 }
