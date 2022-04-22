@@ -1,3 +1,6 @@
+# Copyright (c) 2022 Fyde Innovations Limited and the openFyde Authors.
+# Distributed under the license specified in the root directory of this project.
+
 # Copyright (c) 2017 The Flint OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 

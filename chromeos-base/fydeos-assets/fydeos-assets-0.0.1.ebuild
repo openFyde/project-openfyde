@@ -1,5 +1,5 @@
-# Copyright 2017 The FydeOS Authors. All rights reserved.
-# Distributed under the terms of the GNU General Public License v2
+# Copyright (c) 2022 Fyde Innovations Limited and the openFyde Authors.
+# Distributed under the license specified in the root directory of this project.
 
 EAPI=4
 
