@@ -3,7 +3,7 @@
 
 EAPI="5"
 
-EGIT_REPO_URI="${OPENFYDE_GIT_HOST_URL}/fydeos_hardware_tuning.git"
+EGIT_REPO_URI="${OPENFYDE_GIT_HOST_URL}/fydeos-hardware-tuning.git"
 EGIT_BRANCH="r96-dev"
 
 inherit git-r3
