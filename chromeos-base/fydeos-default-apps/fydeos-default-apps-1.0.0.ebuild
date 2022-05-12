@@ -24,13 +24,6 @@ DEPEND="${RDEPEND}"
 
 src_compile() {
   ${FILESDIR}/build_validations.sh
-  cp ${FILESDIR}/policy/fydeos.json .
-  if ! use fydeos_store; then
-    sed -i "/${FYDEOS_STORE_ID}/d" ./fydeos.json
-  fi
-  if ! use fydeos_arc; then
-    sed -i "/${ARC_SETTING_ID}/d" ./fydeos.json
-  fi
 }
 
 src_install(){
@@ -47,6 +40,4 @@ src_install(){
     doins $cnf
   done
   use fydeos_arc && doins ${FILESDIR}/arc-extensions/*.json
-  insinto /etc/chromium/policies/managed
-  doins fydeos.json
 }
