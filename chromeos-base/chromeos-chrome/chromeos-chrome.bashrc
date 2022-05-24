@@ -56,6 +56,10 @@ cros_pre_src_compile_unpatches() {
   unpatches_when_aborted
 }
 
+cros_pre_src_install_unpatches() {
+  unpatches_when_aborted
+}
+
 cros_post_src_install_unpatches() {
   unpatches_openfyde
 }
