@@ -1,17 +1,28 @@
 #!/bin/bash
 
 # search and apply special patches for chromium of current board
-# patches should be located in overlay-<board>/chromium-patches/
+# patches should be located in the path defined by CHROMIUM_PATCHES_PATH
+# or overlay-<board>/chromium-patches/
+
+# The variable CHROMIUM_PATCHES_PATH can be defined in make.conf of overlay-<board>
+# or make.conf of it's master repositories. 
 
 find_openfyde_patches() {
-  local patches_dir="chromium-patches"
-  local overlay_root=""
-  overlay_root=$(echo "${BOARD_OVERLAY}" | awk -F ' ' '{print $NF}')
-  local full_patches_dir="${overlay_root}/${patches_dir}"
+  local full_patches_dir=""
+  full_patches_dir=${CHROMIUM_PATCHES_PATH}
+
+  if [[ -z "$full_patches_dir" ]] || [[ ! -d "${full_patches_dir}" ]]; then
+    local patches_dir="chromium-patches"
+    local overlay_root=""
+    overlay_root=$(echo "${BOARD_OVERLAY}" | awk -F ' ' '{print $NF}')
+    full_patches_dir="${overlay_root}/${patches_dir}"
+  fi
 
   if [[ ! -d "${full_patches_dir}" ]]; then
     return
   fi
+
+  einfo "Searching for chromium patches in ${full_patches_dir}"
 
   find "${full_patches_dir}" -maxdepth 1 -name '*.patch' | sort -d
 }
