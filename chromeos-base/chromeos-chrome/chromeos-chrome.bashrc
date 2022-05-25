@@ -13,9 +13,18 @@ find_openfyde_patches() {
 
   if [[ -z "$full_patches_dir" ]] || [[ ! -d "${full_patches_dir}" ]]; then
     local patches_dir="chromium-patches"
+    local revert_search_dir=""
     local overlay_root=""
-    overlay_root=$(echo "${BOARD_OVERLAY}" | awk -F ' ' '{print $NF}')
-    full_patches_dir="${overlay_root}/${patches_dir}"
+    for overlay_root in ${BOARD_OVERLAY}; do
+      revert_search_dir="$overlay_root $revert_search_dir"
+    done
+    for overlay_root in $revert_search_dir; do
+      full_patches_dir="${overlay_root}/${patches_dir}"
+      einfo "find: $full_patches_dir"
+      if [[ -d $full_patches_dir ]]; then
+        break
+      fi
+    done
   fi
 
   if [[ ! -d "${full_patches_dir}" ]]; then
@@ -28,6 +37,7 @@ find_openfyde_patches() {
 }
 
 unpatches_openfyde() {
+  einfo "Revert openfyde patches.."
   pushd "${CHROME_ROOT}"/src > /dev/null || die "Cannot chdir to ${CHROME_ROOT}/src"
   find_openfyde_patches | sort -r | while read -r p; do
     patch -R -p1 < "${p}"
@@ -40,8 +50,10 @@ unpatches_when_aborted() {
 }
 
 cros_pre_src_prepare_patches() {
+  einfo "Enter openfyde patches.."
   pushd "${CHROME_ROOT}"/src > /dev/null || die "Cannot chdir to ${CHROME_ROOT}/src"
   find_openfyde_patches | while read -r p; do
+    einfo "Apply:${p}"
     patch -p1 < "${p}" || die
   done
   unpatches_when_aborted
