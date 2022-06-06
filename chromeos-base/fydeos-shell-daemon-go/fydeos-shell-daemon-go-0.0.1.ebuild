@@ -5,7 +5,7 @@ EAPI="6"
 
 
 EGIT_REPO_URI="${OPENFYDE_GIT_HOST_URL}/fydeos-shell-daemon-go.git"
-EGIT_BRANCH="r96"
+EGIT_BRANCH="r102-dev"
 
 inherit git-r3 golang-build
 DESCRIPTION="fydeos shell daemon in golang, the replacement of python version"
@@ -29,8 +29,9 @@ EGO_PN="fydeos.com/shell_daemon"
 
 
 src_compile() {
-   GOARCH=$ARCH golang-build_src_compile
+   GOARCH=$ARCH GO111MODULE=off golang-build_src_compile
 }
+
 get_golibdir() {
   echo "/usr/lib/gopath"  
 }
