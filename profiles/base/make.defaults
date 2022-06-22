@@ -1,0 +1,1 @@
+USE="$USE unibuild has_chromeos_config_bsp"
