@@ -40,13 +40,13 @@ unpatches_openfyde() {
   einfo "Revert openfyde patches.."
   pushd "${CHROME_ROOT}"/src > /dev/null || die "Cannot chdir to ${CHROME_ROOT}/src"
   find_openfyde_patches | sort -r | while read -r p; do
-    patch -R -p1 < "${p}"
+    patch -R -p1 -f -s -g0 --no-backup-if-mismatch -r - < "${p}" || true # ignore reverse patch failure.
   done
   popd || die "Cannot popd from ${CHROME_ROOT}/src"
 }
 
 unpatches_when_aborted() {
-  trap 'unpatches_openfyde' SIGINT SIGTERM SIGQUIT
+  trap 'unpatches_openfyde; trap - SIGINT SIGTERM SIGQUIT ERR' SIGINT SIGTERM SIGQUIT ERR # avoid unpatches multiple times
 }
 
 cros_pre_src_prepare_patches() {
@@ -54,24 +54,19 @@ cros_pre_src_prepare_patches() {
   pushd "${CHROME_ROOT}"/src > /dev/null || die "Cannot chdir to ${CHROME_ROOT}/src"
   find_openfyde_patches | while read -r p; do
     einfo "Apply:${p}"
-    patch -p1 < "${p}" || die
+    patch -p1 -f -s -g0 --no-backup-if-mismatch -r - < "${p}" || { unpatches_openfyde; die; }
   done
-  unpatches_when_aborted
   popd || die "Cannot popd from ${CHROME_ROOT}/src"
 }
 
-cros_pre_src_configure_unpatches() {
+cros_pre_src_configure_setup_unpatches_hook() {
   unpatches_when_aborted
 }
 
-cros_pre_src_compile_unpatches() {
+cros_pre_src_compile_setup_unpatches_hook() {
   unpatches_when_aborted
 }
 
-cros_pre_src_install_unpatches() {
-  unpatches_when_aborted
-}
-
-cros_post_src_install_unpatches() {
+cros_post_src_compile_setup_unpatches_hook() {
   unpatches_openfyde
 }
