@@ -12,7 +12,7 @@ HOMEPAGE="http://www.flintos.io"
 LICENSE="BSD-Google"
 SLOT="0"
 KEYWORDS="*"
-IUSE="fydeos_arc fydeos_store"
+IUSE="fydeos_arc +fydeos_store"
 S="${WORKDIR}"
 
 ARC_SETTING_ID="iakadpgajjigiaojnbdmodlngmbkfhag"
