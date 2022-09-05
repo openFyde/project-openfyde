@@ -1,0 +1,2 @@
+chromeos-base/chrome-icu -runhooks
+chromeos-base/chromeos-chrome -runhooks
