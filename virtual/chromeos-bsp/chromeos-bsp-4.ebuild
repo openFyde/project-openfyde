@@ -15,11 +15,11 @@ KEYWORDS="*"
 IUSE=""
 
 RDEPEND="
-	!chromeos-base/chromeos-bsp-null
-	virtual/fydeos-arch-spec
-	virtual/fydeos-chip-spec
-	virtual/fydeos-board-spec
-	virtual/fydeos-variant-spec
+    !chromeos-base/chromeos-bsp-null
+    virtual/fydeos-arch-spec
+    virtual/fydeos-chip-spec
+    virtual/fydeos-board-spec
+    virtual/fydeos-variant-spec
     virtual/fydeos-chromedev-flags
     chromeos-base/fydeos-console-issue
     chromeos-base/fydeos-default-apps
@@ -28,12 +28,15 @@ RDEPEND="
     app-i18n/rime-server
     app-i18n/chromeos-pinyin
     chromeos-base/fydeos-shell-daemon-go
-	net-misc/fydeos-remote-help
+    net-misc/fydeos-remote-help
     chromeos-base/fydeos-dev-remote-patch
     chromeos-base/fydeos-stateful-updater
     chromeos-base/fydeos_power_wash
     chromeos-base/fydeos-hardware-tuner
+    net-misc/wget
+    app-arch/zip
+    app-editors/nano
 "
 DEPEND="
-	${RDEPEND}
+    ${RDEPEND}
 "
