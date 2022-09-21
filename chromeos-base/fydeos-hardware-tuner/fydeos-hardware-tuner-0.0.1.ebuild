@@ -27,6 +27,7 @@ src_install() {
   doexe hwtuner
   doexe hwtuner_info
   dosym /usr/share/hwtuner-script/hwtuner /usr/bin/hwtuner
+  dosym /mnt/stateful_partition/unencrypted/gesture/55-alt-touchpad-cmt.conf /etc/gesture/55-alt-touchpad-cmt.conf
   dosym /mnt/stateful_partition/unencrypted/gesture/60-user-defined-devices.conf /etc/gesture/60-user-defined-devices.conf
 
   insinto /etc/init
