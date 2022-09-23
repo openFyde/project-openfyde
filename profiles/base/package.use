@@ -1,2 +1,2 @@
 chromeos-base/chrome-icu -runhooks
-chromeos-base/chromeos-chrome -runhooks
+chromeos-base/chromeos-chrome -runhooks -autotest -build_tests
