@@ -13,7 +13,7 @@ HOMEPAGE="http://fydeos.com"
 LICENSE="BSD-Google"
 SLOT="0"
 KEYWORDS="*"
-IUSE=""
+IUSE="update"
 
 RDEPEND=""
 
@@ -30,6 +30,8 @@ src_install() {
   dosym /mnt/stateful_partition/unencrypted/gesture/55-alt-touchpad-cmt.conf /etc/gesture/55-alt-touchpad-cmt.conf
   dosym /mnt/stateful_partition/unencrypted/gesture/60-user-defined-devices.conf /etc/gesture/60-user-defined-devices.conf
 
-  insinto /etc/init
-  doins ${FILESDIR}/fydeos-hwtuner-updater.conf
+  if use update; then
+    insinto /etc/init
+    doins ${FILESDIR}/fydeos-hwtuner-updater.conf
+  fi
 }
