@@ -5,10 +5,11 @@
 # or overlay-<board>/chromium-patches/
 
 # The variable CHROMIUM_PATCHES_PATH can be defined in make.conf of overlay-<board>
-# or make.conf of it's master repositories. 
+# or make.conf of it's master repositories.
 
 find_openfyde_patches() {
   local full_patches_dir=""
+  local patches_dirs=()
   full_patches_dir=${CHROMIUM_PATCHES_PATH}
 
   if [[ -z "$full_patches_dir" ]] || [[ ! -d "${full_patches_dir}" ]]; then
@@ -22,18 +23,18 @@ find_openfyde_patches() {
       full_patches_dir="${overlay_root}/${patches_dir}"
       einfo "find: $full_patches_dir"
       if [[ -d $full_patches_dir ]]; then
-        break
+        patches_dirs+=($full_patches_dir)
       fi
     done
   fi
 
-  if [[ ! -d "${full_patches_dir}" ]]; then
-    return
-  fi
-
-  einfo "Searching for chromium patches in ${full_patches_dir}"
-
-  find "${full_patches_dir}" -maxdepth 1 -name '*.patch' | sort -d
+  local patch_dir=""
+  for patch_dir in ${patches_dirs[@]}; do
+    local patch_file=""
+    for patch_file in `find "${patch_dir}" -maxdepth 1 -name '*.patch' | sort -d`; do
+      echo $patch_file
+    done
+  done
 }
 
 unpatches_openfyde() {
