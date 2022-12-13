@@ -26,6 +26,8 @@ find_openfyde_patches() {
         patches_dirs+=($full_patches_dir)
       fi
     done
+  else
+    patches_dirs+=($full_patches_dir)
   fi
 
   local patch_dir=""
