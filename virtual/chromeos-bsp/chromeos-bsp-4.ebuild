@@ -36,6 +36,7 @@ RDEPEND="
     net-misc/wget
     app-arch/zip
     app-editors/nano
+    app-editors/vim
 "
 DEPEND="
     ${RDEPEND}
