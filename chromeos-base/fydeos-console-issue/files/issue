@@ -1,38 +1,36 @@
-      fffffffffff
-    f:::::::::f                                     ddddddd                                                           
-   f:::::ffff                                       d:::::d                                  OOOOOOOOO                 SSSSSSSSSSSSS
-  f:::::f                                           d:::::d                              OO::::::::::::OO            S::::::::::::::::S
-  f:::::f                                           d:::::d                            OO::::OOOOOOOOO::::OO        S:::::SSSSSSSS::::::S
-  f:::::f                                           d:::::d                          O:::::O           O:::::O     S:::::S        SSSSSSS
- f::::::ffffffff  yyyyyyy           yyyyyyy ddddddddd:::::d     eeeeeeeeeeee       O:::::O               O:::::O   S::::S
- f::::::::::::::f  y:::::y         y:::::ydd::::::::::::::d   ee::::::::::::ee    O:::::O                 O:::::O  S:::::S
- f:::::::fffffffff  yyyyyyy       y:::::yd::::::::::::::::d  e::::::eeeee:::::ee O:::::O                   O:::::O  S::::::SSSS
-  f:::::f                        y:::::yd:::::::ddddd:::::d e::::::e     e:::::eO:::::O                     O:::::O  SS::::::::SSSSS
-  f:::::f             y:::::y   y:::::y d::::::d    d:::::d e:::::::eeeee::::::eO:::::O                     O:::::O     SS::::::::::SS
-  f:::::f              y:::::y y:::::y  d:::::d     d:::::d e:::::::::::::::::e O:::::O                     O:::::O        SSSSSSS:::::S
-  f:::::f               y:::::y:::::y   d:::::d     d:::::d e::::::eeeeeeeeeee   O:::::O                   O:::::O                S:::::S
-  f:::::f                y:::::::::y    d:::::d     d:::::d e:::::::e             O:::::O                 O:::::O                  S:::::S
-  f:::::f                 y:::::::y     d::::::ddddd::::::d e::::::::e             O:::::O               O:::::O   SSSSSSS        S::::::S
-  f:::::f                  y:::::y       d::::::::::::::::d  e::::::::eeeeeeee       O:::::O           O:::::O     S::::::SSSSSSSS:::::::S
-  f:::::f                 y:::::y         d:::::::::ddd:::d   ee:::::::::::::e         OO::::OOOOOOOOO::::OO        S::::::::::::::::::SS
-  fffffff                y:::::y           ddddddddd   dddd     eeeeeeeeeeeeee           OO::::::::::::OO            S:::::::::::::::::S
-                        y:::::y                                                              OOOOOOOOO                  SSSSSSSSSSSSS
+      fffffffffffff
+    ff:::::::::::::ff                               ddddddd
+   f::::::ffffff::ff                                d:::::d                                 OOOOOOOOO               SSSSSSSSSSSSS
+  f::::::f      ff                                  d:::::d                             OO::::::::::::OO          SS:::::::::::::SSS
+  f:::::f                                           d:::::d                           OO::::OOOOOOOOO::::OO      S:::::SSSSSSSS:::::SS
+  f:::::f                                           d:::::d                         O:::::O           O:::::O   S:::::S        SSSSSSS
+ff::::::ffffffff  yyyyyyy           yyyyyyy  dddddd d:::::d     eeeeeeeeee        O:::::O               O:::::O S::::S
+f:::::::::::::::f  y:::::y         y:::::yddd::::::d::::::d  eee::eeeeeee::eee   O:::::O                 O:::::OS:::::S
+ff:::::::fffffffff  yyyyyyy       y:::::yd:::::ddddd::::::d e::::e       e::::e O:::::O                   O:::::OS:::::SSSSS
+  f:::::f                        y:::::yd::::d      d:::::de:::e          e:::eO:::::O                     O:::::OSSS:::::::SSSSS
+  f:::::f             y:::::y   y:::::yd::::d       d:::::de::::eeeeeeeeee::::eO:::::O                     O:::::O   SSS:::::::::SS
+  f:::::f              y:::::y y:::::yd::::d        d:::::de:::::::::::::::::e O:::::O                     O:::::O      SSSSSSS:::::S
+  f:::::f               y:::::y:::::y d::::d        d:::::de::::eeeeeeeeeeeee   O:::::O                   O:::::O              S:::::S
+  f:::::f                y:::::::::y  d:::::d       d:::::de:::e                 O:::::O                 O:::::O                S:::::S
+  f:::::f                 y:::::::y    dd::::d      d:::::de::::e         eeeee   O:::::O               O:::::O SSSSSSS         S:::::S
+  f:::::f                  y:::::y       d::::dddddd::::::d e::::e       e:::e      O:::::O           O:::::O   S::::::S       S::::::S
+  f:::::f                 y:::::y         ddd::::::d::::::d  eee::eeeeeee:eee         OO::::OOOOOOOOO::::OO      S::::::SSSSSSS:::::SS
+  fffffff                y:::::y             dddddd ddddddd     eeeeeeeeee              OO::::::::::::OO          SSS:::::::::::::SSS
+                        y:::::y                                                             OOOOOOOOO                SSSSSSSSSSSSS
                        y:::::y
                       y:::::y
-                     y:::::y
-                    yyyyyyy
+                       y:::y
+                        yyy
+
+V16 Existential blossom
+_______________________________________________________________________________________________________________________________________
 
 
-v16 Existential blossom
+Welcome to the FydeOS console, we hope you know what you are doing!
 
-------------------------------------------------------------------------------------------------------------------------------------------
+> To get help, visit: https://fydeos.io/help
 
-
-Welcome to the FydeOS Console, we hope you know what you are doing!
-
-To get help, visit: https://fydeos.io/help
-
-To return to the browser, press:
+> To return to the browser, press:
 
  __________     _________     _____________ 
 |\\        /|   |\\       /|   |\\           /| 
@@ -40,6 +38,4 @@ To return to the browser, press:
 | | Ctrl | | + | | Alt | | + | | <--(F1) | |
 | +------+ |   | +-----+ |   | +---------+ |
 |/________\\|   |/_______\\|   |/___________\\|
-
-
 
