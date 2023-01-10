@@ -1,13 +1,45 @@
-Developer Console
+      fffffffffff
+    f:::::::::f                                     ddddddd                                                           
+   f:::::ffff                                       d:::::d                                  OOOOOOOOO                 SSSSSSSSSSSSS
+  f:::::f                                           d:::::d                              OO::::::::::::OO            S::::::::::::::::S
+  f:::::f                                           d:::::d                            OO::::OOOOOOOOO::::OO        S:::::SSSSSSSS::::::S
+  f:::::f                                           d:::::d                          O:::::O           O:::::O     S:::::S        SSSSSSS
+ f::::::ffffffff  yyyyyyy           yyyyyyy ddddddddd:::::d     eeeeeeeeeeee       O:::::O               O:::::O   S::::S
+ f::::::::::::::f  y:::::y         y:::::ydd::::::::::::::d   ee::::::::::::ee    O:::::O                 O:::::O  S:::::S
+ f:::::::fffffffff  yyyyyyy       y:::::yd::::::::::::::::d  e::::::eeeee:::::ee O:::::O                   O:::::O  S::::::SSSS
+  f:::::f                        y:::::yd:::::::ddddd:::::d e::::::e     e:::::eO:::::O                     O:::::O  SS::::::::SSSSS
+  f:::::f             y:::::y   y:::::y d::::::d    d:::::d e:::::::eeeee::::::eO:::::O                     O:::::O     SS::::::::::SS
+  f:::::f              y:::::y y:::::y  d:::::d     d:::::d e:::::::::::::::::e O:::::O                     O:::::O        SSSSSSS:::::S
+  f:::::f               y:::::y:::::y   d:::::d     d:::::d e::::::eeeeeeeeeee   O:::::O                   O:::::O                S:::::S
+  f:::::f                y:::::::::y    d:::::d     d:::::d e:::::::e             O:::::O                 O:::::O                  S:::::S
+  f:::::f                 y:::::::y     d::::::ddddd::::::d e::::::::e             O:::::O               O:::::O   SSSSSSS        S::::::S
+  f:::::f                  y:::::y       d::::::::::::::::d  e::::::::eeeeeeee       O:::::O           O:::::O     S::::::SSSSSSSS:::::::S
+  f:::::f                 y:::::y         d:::::::::ddd:::d   ee:::::::::::::e         OO::::OOOOOOOOO::::OO        S::::::::::::::::::SS
+  fffffff                y:::::y           ddddddddd   dddd     eeeeeeeeeeeeee           OO::::::::::::OO            S:::::::::::::::::S
+                        y:::::y                                                              OOOOOOOOO                  SSSSSSSSSSSSS
+                       y:::::y
+                      y:::::y
+                     y:::::y
+                    yyyyyyy
+
+
+v16 Existential blossom
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Welcome to the FydeOS Console, we hope you know what you are doing!
+
+To get help, visit: https://fydeos.io/help
 
 To return to the browser, press:
 
-  [ Ctrl ] and [ Alt ] and [ <- ]  (F1)
+ __________     _________     _____________ 
+|\\        /|   |\\       /|   |\\           /| 
+| +------+ |   | +-----+ |   | +---------+ |
+| | Ctrl | | + | | Alt | | + | | <--(F1) | |
+| +------+ |   | +-----+ |   | +---------+ |
+|/________\\|   |/_______\\|   |/___________\\|
 
-███████╗██╗   ██╗██████╗ ███████╗ ██████╗ ███████╗
-██╔════╝╚██╗ ██╔╝██╔══██╗██╔════╝██╔═══██╗██╔════╝
-█████╗   ╚████╔╝ ██║  ██║█████╗  ██║   ██║███████╗
-██╔══╝    ╚██╔╝  ██║  ██║██╔══╝  ██║   ██║╚════██║
-██║        ██║   ██████╔╝███████╗╚██████╔╝███████║
-╚═╝        ╚═╝   ╚═════╝ ╚══════╝ ╚═════╝ ╚══════╝
+
 
