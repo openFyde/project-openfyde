@@ -362,9 +362,9 @@ main() {
   read_local_version
   read_os_boardname
   fetch_version_info
-  do_update
 
-  post_update
+  trap post_update EXIT
+  do_update
 }
 
 main "$@"
