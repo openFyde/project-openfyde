@@ -79,26 +79,33 @@ target_partition=""
 
 [ $# -le 1 ] && print_usage
 
-if ! is_os_running_from_installer; then
-  echo "The system is not running from removable disk."
-  print_usage
-  exit 0
-fi
-
-while [ $# -gt 1 ]; do
+force="false"
+while [ $# -gt 0 ]; do
         opt=$1
 
         case $opt in
                 -d | --dst )
                         target_partition=$2
-                        break
+                        shift
+                        ;;
+                -f | --force )
+                        force="true"
                         ;;
                 * )
                         print_usage
                         ;;
         esac
-
+        shift
 done
+
+if [ "$force" = "false" ]; then
+  if ! is_os_running_from_installer; then
+    echo "The system is not running from removable disk."
+    print_usage
+    exit 0
+  fi
+fi
+
 echo $target_partition
 if is_partition $target_partition; then
   expand_partition $target_partition
