@@ -36,6 +36,7 @@ RDEPEND="
     app-arch/zip
     app-editors/nano
     app-editors/vim
+    sys-apps/usb-modeswitch-data
 "
 DEPEND="
     ${RDEPEND}
