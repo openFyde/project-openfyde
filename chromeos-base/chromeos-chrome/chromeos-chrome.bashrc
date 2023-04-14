@@ -39,13 +39,27 @@ find_openfyde_patches() {
   done
 }
 
+# use a file as the mark, not a variable in the script, because every phase(src_configure, src_compile...) is new env
+OPENFYDE_CHROMIUM_PATCHED_MARK_FILE="${WORKDIR}/openfyde_chromium_patched"
+mark_patched() {
+  touch "$OPENFYDE_CHROMIUM_PATCHED_MARK_FILE"
+}
+mark_reverted() {
+  rm -f "$OPENFYDE_CHROMIUM_PATCHED_MARK_FILE"
+}
+
 unpatches_openfyde() {
+  if [[ ! -f "$OPENFYDE_CHROMIUM_PATCHED_MARK_FILE" ]]; then
+    einfo "Not patched, may reverted already"
+    return
+  fi
   einfo "Revert openfyde patches.."
   pushd "${CHROME_ROOT}"/src > /dev/null || die "Cannot chdir to ${CHROME_ROOT}/src"
   find_openfyde_patches | sort -r | while read -r p; do
     patch -R -p1 -f -s -g0 --no-backup-if-mismatch -r - < "${p}" || true # ignore reverse patch failure.
   done
   popd || die "Cannot popd from ${CHROME_ROOT}/src"
+  mark_reverted
 }
 
 unpatches_when_aborted() {
@@ -60,6 +74,7 @@ cros_pre_src_prepare_patches() {
     patch -p1 -f -s -g0 --no-backup-if-mismatch -r - < "${p}" || { unpatches_openfyde; die; }
   done
   popd || die "Cannot popd from ${CHROME_ROOT}/src"
+  mark_patched
 }
 
 cros_pre_src_configure_setup_unpatches_hook() {

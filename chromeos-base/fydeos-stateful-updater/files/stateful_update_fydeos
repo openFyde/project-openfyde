@@ -28,6 +28,13 @@ STATEFUL_DIR="/mnt/stateful_partition"
 UPDATE_STATE_FILE=".update_available"
 UPDATE_PROGRESS_FILE="/run/stateful_update/progress"
 
+LSB_RELEASE_FILE="/etc/lsb-release"
+BOARD_NAME_KEY="CHROMEOS_RELEASE_BOARD"
+CHROMIUMOS_VERSION_KEY="CHROMEOS_RELEASE_VERSION"
+FYDEOS_VERSION_KEY="CHROMEOS_RELEASE_BUILD_TYPE"
+
+LICENSE_UTIL_FILE="/usr/share/fydeos_shell/license-utils.sh"
+
 DEFINE_string stateful_change "${OLD_STATE}" \
   "The state of the new stateful partition - used in update testing."
 
@@ -40,11 +47,103 @@ remove_quotes() {
   echo "$1" | sed -e "s/^'//; s/'$//"
 }
 
+REPORT_JSON_FORMAT='{
+  "event_id": "%s",
+  "message": "%s",
+  "level": "%s",
+  "tags": [
+    ["level", "%s"],
+    ["board", "%s"]
+  ],
+  "release": "%s",
+  "extra": {
+    "license_id": "%s",
+    "crostini_version": "%s",
+    "chromiumos_version": "%s"
+  }
+}'
+
+get_report_event_id() {
+  local ts
+  local uuid
+  ts=$(date +%s)
+  uuid=$(uuidgen)
+  echo "${uuid}-${ts}" | md5sum | awk '{print $1}'
+}
+
+get_lsb_release_value() {
+  local key="$1"
+  grep "$key" "$LSB_RELEASE_FILE" 2> /dev/null | awk -F '=' '{print $2}'
+}
+
+get_board_name() {
+  get_lsb_release_value "${BOARD_NAME_KEY}"
+}
+
+get_chromiumos_version() {
+  get_lsb_release_value "${CHROMIUMOS_VERSION_KEY}"
+}
+
+get_fydeos_version() {
+  get_lsb_release_value "${FYDEOS_VERSION_KEY}"
+}
+
+get_license_id() {
+  "$LICENSE_UTIL_FILE" id 2> /dev/null
+}
+
+report() {
+  local level="$1"
+  local message="$2"
+  local board=""
+  local version=""
+  local chromiumos_version=""
+  local crostini_version=""
+  local license_id=""
+  local event_id=""
+
+  board=$(get_board_name)
+  version=$(get_fydeos_version)
+  chromiumos_version=$(get_chromiumos_version)
+  crostini_version=${FYDEOS_STATEFUL_UPDATE_VERSION}
+  license_id=$(get_license_id)
+  event_id=$(get_report_event_id)
+  local data=""
+  data=$(printf "$REPORT_JSON_FORMAT" "$event_id" "$message" "$level" "$level" \
+        "$board" "$version" "$license_id" \
+        "$crostini_version" "$chromiumos_version")
+  curl -d "${data}" \
+    -H 'Content-Type: application/json' \
+    -H "X-Sentry-Auth: Sentry sentry_version=7, sentry_key=9cad8ea2106c4e25994df775fb6db20c, sentry_client=cros-bash/0.1" \
+    https://sentry.io/api/4504632377868288/store/
+}
+
 download_stateful_payload(){
-    mkdir -p "$(dirname "$UPDATE_PROGRESS_FILE")"
+  mkdir -p "$(dirname "$UPDATE_PROGRESS_FILE")"
   # Download and unzip directories onto the stateful partition.
-  eval "curl -L --progress-bar --max-time 600 \"${stateful_update_url}\" 2>\"${UPDATE_PROGRESS_FILE}\"" |
-      tar --ignore-command-error --overwrite --directory=${STATEFUL_DIR} -xz
+  if [ -n "${FYDEOS_STATEFUL_UPDATE_VERSION}" ]; then
+    local tmp_file="/tmp/stateful_update-${FYDEOS_STATEFUL_UPDATE_VERSION}.gz"
+    eval "curl -L --progress-bar --max-time 600 -C - \
+        \"${stateful_update_url}\" -o \"${tmp_file}\" \
+        2>\"${UPDATE_PROGRESS_FILE}\""
+    tar --ignore-command-error --overwrite --directory=${STATEFUL_DIR} -xzf "${tmp_file}"
+  else
+    eval "curl -L --progress-bar --max-time 600 \"${stateful_update_url}\" 2>\"${UPDATE_PROGRESS_FILE}\"" |
+        tar --ignore-command-error --overwrite --directory=${STATEFUL_DIR} -xz
+  fi
+}
+
+report_download_failure() {
+  local code="$1"
+  report "error" "Download failed with code ${code}"
+}
+
+report_download_success() {
+  report "info" "Download successfully"
+}
+
+report_invalid_payload() {
+  report "error" "Invalid payload"
 }
 
 update_dev_image () {
@@ -97,8 +196,10 @@ update_dev_image () {
       fi
     done
     if [ ${download_exit_code} -ne 0 ]; then
+      report_download_failure "${download_exit_code}"
       return ${download_exit_code}
     fi
+    report_download_success
     echo >&2 "Successfully downloaded update."
   else
     echo >&2 "Reading local payload ${local_payload_path}"
@@ -116,6 +217,7 @@ update_dev_image () {
   if [ ! -d "${STATEFUL_DIR}/var_new" ] ||
       [ ! -d "${STATEFUL_DIR}/dev_image_new" ]; then
     echo >&2 "Missing var or dev_image in stateful payload."
+    report_invalid_payload
     return 1
   fi
 }

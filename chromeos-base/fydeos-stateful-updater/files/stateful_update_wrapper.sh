@@ -256,6 +256,7 @@ fetch_version_info() {
 
 upgrade() {
   export FYDEOS_STATEFUL_UPDATE_URL="$REMOTE_FILE_URL"
+  export FYDEOS_STATEFUL_UPDATE_VERSION="$REMOTE_DETAIL_VERSION"
   if sh "$STATEFUL_UPDATE_SCRIPT"; then
     set_reboot_required
   fi
@@ -361,9 +362,9 @@ main() {
   read_local_version
   read_os_boardname
   fetch_version_info
-  do_update
 
-  post_update
+  trap post_update EXIT
+  do_update
 }
 
 main "$@"
