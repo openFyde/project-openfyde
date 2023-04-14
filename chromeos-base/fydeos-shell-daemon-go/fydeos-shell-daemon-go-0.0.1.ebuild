@@ -13,11 +13,12 @@ HOMEPAGE="http://fydeos.com"
 
 LICENSE="BSD-Google"
 SLOT="0"
-KEYWORDS="amd64 arm"
+KEYWORDS="amd64 arm arm64"
 IUSE=""
 
 RDEPEND="
   !chromeos-base/fydeos-shell-daemon
+  !chromeos-base/fydeos-shell-daemon-bin
   "
 
 DEPEND="${RDEPEND}
@@ -33,7 +34,7 @@ src_compile() {
 }
 
 get_golibdir() {
-  echo "/usr/lib/gopath"  
+  echo "/usr/lib/gopath"
 }
 
 src_install() {
