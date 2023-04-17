@@ -15,14 +15,6 @@ KEYWORDS="*"
 IUSE=""
 
 RDEPEND="
-    !chromeos-base/chromeos-bsp-null
-    virtual/fydeos-arch-spec
-    virtual/fydeos-chip-spec
-    virtual/fydeos-board-spec
-    virtual/fydeos-variant-spec
-    virtual/fydeos-chromedev-flags
-	virtual/openfyde-bsp
-	virtual/fydeos-bsp
 "
 DEPEND="
     ${RDEPEND}
