@@ -18,7 +18,6 @@ RDEPEND="
     chromeos-base/fydeos-console-issue
     chromeos-base/fydeos-default-apps
     net-misc/patch-tlsdate
-    app-i18n/rime-server
     app-i18n/chromeos-pinyin
     chromeos-base/fydeos-shell-daemon-go
     net-misc/fydeos-remote-help
