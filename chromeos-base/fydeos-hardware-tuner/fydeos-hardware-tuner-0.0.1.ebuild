@@ -4,7 +4,7 @@
 EAPI="5"
 
 EGIT_REPO_URI="${OPENFYDE_GIT_HOST_URL}/fydeos-hardware-tuning.git"
-EGIT_BRANCH="r96-dev"
+EGIT_BRANCH="main"
 
 inherit git-r3
 DESCRIPTION="Tunning system driver and configrations in console mode"

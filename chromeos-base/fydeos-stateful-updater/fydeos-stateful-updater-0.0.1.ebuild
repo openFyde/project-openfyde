@@ -16,5 +16,11 @@ DEPEND="${RDEPEND}"
 
 src_install() {
 	exeinto /usr/bin
-	doexe "${FILESDIR}"/*
+	doexe "${FILESDIR}"/stateful_update_fydeos
+	if use arm64; then
+		# temporary workaround for arm64, should be removed when next release is out
+		newbin "${FILESDIR}"/stateful_update_wrapper_64.sh stateful_update_wrapper.sh
+	else
+		doexe "${FILESDIR}"/stateful_update_wrapper.sh
+	fi
 }

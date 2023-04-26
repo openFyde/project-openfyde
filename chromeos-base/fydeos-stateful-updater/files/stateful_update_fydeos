@@ -122,11 +122,12 @@ download_stateful_payload(){
   mkdir -p "$(dirname "$UPDATE_PROGRESS_FILE")"
   # Download and unzip directories onto the stateful partition.
   if [ -n "${FYDEOS_STATEFUL_UPDATE_VERSION}" ]; then
-    local tmp_file="/tmp/stateful_update-${FYDEOS_STATEFUL_UPDATE_VERSION}.gz"
+    local tmp_file="/tmp/stateful_update-${FYDEOS_STATEFUL_UPDATE_VERSION}.tgz"
     eval "curl -L --progress-bar --max-time 600 -C - \
         \"${stateful_update_url}\" -o \"${tmp_file}\" \
         2>\"${UPDATE_PROGRESS_FILE}\""
     tar --ignore-command-error --overwrite --directory=${STATEFUL_DIR} -xzf "${tmp_file}"
+    rm "${tmp_file}"
   else
     eval "curl -L --progress-bar --max-time 600 \"${stateful_update_url}\" 2>\"${UPDATE_PROGRESS_FILE}\"" |
         tar --ignore-command-error --overwrite --directory=${STATEFUL_DIR} -xz
