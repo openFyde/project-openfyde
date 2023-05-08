@@ -1,7 +1,7 @@
 # Copyright (c) 2022 Fyde Innovations Limited and the openFyde Authors.
 # Distributed under the license specified in the root directory of this project.
 
-EAPI=4
+EAPI=7
 
 inherit toolchain-funcs
 
@@ -29,7 +29,7 @@ src_install() {
 
 	insinto /usr/share/chromeos-assets/screensavers
 	doins -r "${FILESDIR}"/screensavers/*
-	
+
 	insinto /usr/share/chromeos-assets/wallpaper
 	doins -r "${FILESDIR}"/wallpaper/*
 }
