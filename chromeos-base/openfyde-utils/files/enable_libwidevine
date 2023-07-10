@@ -80,6 +80,8 @@ install() {
 
   cp "$file" "$target_dir/$TARGET_FILE_NAME"
 
+  chmod 644 "$target_dir/$TARGET_FILE_NAME"
+
   info "Almost done, please reboot to enable Widevine CDM"
 }
 
