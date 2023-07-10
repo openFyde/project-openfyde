@@ -30,6 +30,7 @@ RDEPEND="
     app-editors/vim
     sys-apps/usb-modeswitch-data
     chromeos-base/openfyde-updater
+    chromeos-base/openfyde-utils
 "
 DEPEND="
     ${RDEPEND}

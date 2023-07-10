@@ -88,3 +88,11 @@ cros_pre_src_compile_setup_unpatches_hook() {
 cros_post_src_compile_setup_unpatches_hook() {
   unpatches_openfyde
 }
+
+cros_post_src_install_remove_widevine_placeholder() {
+  local WIDEVINE_DIR="$D_CHROME_DIR/WidevineCdm"
+  if [[ -d "$WIDEVINE_DIR" ]]; then
+    einfo "Remove WidevineCdm placeholder"
+    rm -rf "${WIDEVINE_DIR:?}"/_platform_specific/*
+  fi
+}
