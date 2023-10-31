@@ -1,1 +1,1 @@
-USE="$USE unibuild has_chromeos_config_bsp"
+USE="$USE unibuild has_chromeos_config_bsp postscript"
