@@ -17,7 +17,6 @@ IUSE=""
 RDEPEND="
     chromeos-base/fydeos-console-issue
     chromeos-base/fydeos-default-apps
-    net-misc/patch-tlsdate
     app-i18n/chromeos-pinyin
     chromeos-base/fydeos-shell-daemon-go
     net-misc/fydeos-remote-help
@@ -30,6 +29,8 @@ RDEPEND="
     app-editors/nano
     app-editors/vim
     sys-apps/usb-modeswitch-data
+    chromeos-base/openfyde-updater
+    chromeos-base/openfyde-utils
 "
 DEPEND="
     ${RDEPEND}

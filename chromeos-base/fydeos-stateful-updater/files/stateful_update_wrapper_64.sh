@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly BASE_VERSION_URL="https://devserver.fydeos.com/stateful-update"
+readonly BASE_VERSION_URL="https://devserver.fydeos.io/stateful-update"
 readonly LOG_FILE="/var/log/crostini-fydeos-update.log"
 
 readonly CURL_BIN="/usr/bin/curl"

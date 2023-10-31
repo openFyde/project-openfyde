@@ -1,0 +1,194 @@
+#!/usr/bin/env bash
+
+ARGV0="enable_libwidevine"
+declare -r LIBRARY_PATH_NAME="WidevineCdm"
+declare -r MANIFEST_PATH="/opt/google/chrome/WidevineCdm/manifest.json"
+declare -r BASE_TARGET_DIR="/mnt/stateful_partition/unencrypted/widevine"
+declare -r TARGET_FILE_NAME="libwidevinecdm.so"
+
+declare -Ar LIBRARY_FILE_MD5SUM_MAP=(
+  ["x64"]="4c9dfe80684b306b0029ef7b9db7113a"
+  ["arm"]="50cc7fd94adb70060f811f0997d44b6d"
+  ["arm64"]="9b68488364ac2a7d4e7e15cb36ebb489"
+)
+
+PLATFORM_SPECIFIC_LIBRARY_PATH_NAME=""
+
+info() {
+  echo "info: $*"
+}
+
+error() {
+  echo "error: $*" >&2
+}
+
+die() {
+  error "$*"
+  exit 1
+}
+
+is_arm() {
+  local arm_arch_list=(arm armv7l aarch64_be aarch64 armv8b armv8l)
+  for arch in "${arm_arch_list[@]}"; do
+    if [ "$arch" == "$1" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+is_64bit() {
+  [[ -d "/lib64" ]] || [[ -d "/usr/lib64" ]]
+}
+
+get_arch() {
+  local arch=""
+  arch=$(uname -m)
+  if [[ "$arch" == "x86_64" ]]; then
+    arch="x64"
+  elif is_arm "$arch"; then
+    if is_64bit; then
+      arch="arm64"
+    else
+      arch="arm"
+    fi
+  else
+    die "Unsupported architecture: $arch"
+  fi
+  echo "$arch"
+}
+
+get_platform_path() {
+  local arch="$1"
+  PLATFORM_SPECIFIC_LIBRARY_PATH_NAME=$(jq -r ".platforms[] | select(.arch == \"${arch}\") | .sub_package_path" \
+    "$MANIFEST_PATH" 2>/dev/null)
+}
+
+remove_dir() {
+  local dir="$1"
+  if [[ -d "$dir" ]]; then
+    rm -fr "$dir"
+  fi
+}
+
+
+install() {
+  local file="$1"
+  info "Installing Widevine CDM"
+  local target_dir="$BASE_TARGET_DIR/$LIBRARY_PATH_NAME/$PLATFORM_SPECIFIC_LIBRARY_PATH_NAME"
+  mkdir -p "$target_dir"
+
+  cp "$file" "$target_dir/$TARGET_FILE_NAME"
+
+  chmod 644 "$target_dir/$TARGET_FILE_NAME"
+
+  info "Almost done, please reboot to enable Widevine CDM"
+}
+
+clean_old_file() {
+  remove_dir "$BASE_TARGET_DIR/$LIBRARY_PATH_NAME"
+}
+
+assert_md5sum() {
+  local file="$1"
+  local arch="$2"
+  local md5sum=""
+  md5sum=$(md5sum "$file" | awk '{print $1}')
+  if [[ "$md5sum" != "${LIBRARY_FILE_MD5SUM_MAP["$arch"]}" ]]; then
+    die "MD5 sum mismatch, please download the correct file again"
+  fi
+}
+
+disable_widevine() {
+  local dir="$BASE_TARGET_DIR/$LIBRARY_PATH_NAME"
+  if [[ -d "$dir" ]]; then
+    remove_dir "$dir"
+    info "Almost done, please reboot to disable Widevine CDM"
+  else
+    info "Widevine CDM is not installed, nothing to do"
+  fi
+}
+
+get_status() {
+  if [[ -z "$PLATFORM_SPECIFIC_LIBRARY_PATH_NAME" ]]; then
+    echo "no"
+    return
+  fi
+  local file="$BASE_TARGET_DIR/$LIBRARY_PATH_NAME/$PLATFORM_SPECIFIC_LIBRARY_PATH_NAME/$TARGET_FILE_NAME"
+  if [[ -f "$file" ]]; then
+    echo "yes"
+  else
+    echo "no"
+  fi
+}
+
+check_user() {
+  if [[ $EUID -ne 0 ]]; then
+    echo "Please run this script as root or prepend sudo, abort."
+    exit 1
+  fi
+}
+
+get_running_state() {
+  if pidof -o $$ -x "$ARGV0" >/dev/null; then
+    echo "yes"
+  else
+    echo "no"
+  fi
+}
+
+usage() {
+  echo "Usage: $ARGV0 [--file] [--status] [--disable] [[--state]]"
+  echo "  --file: The .so file to install"
+  echo "  --status: Print current Widevine CDM status"
+  echo "  --disable: Disable Widevine CDM"
+  echo "  --state: Print running state of this script"
+}
+
+main() {
+  check_user
+  local arch=""
+  arch=$(get_arch)
+
+  local argument="$1"
+  local file=""
+  if [[ "$argument" == "--file" ]]; then
+    shift
+    if [[ -z "$1" ]]; then
+      die "Missing file argument"
+    fi
+    file="$1"
+    shift
+  elif [[ "$argument" == "--disable" ]]; then
+    disable_widevine
+    exit 0
+  elif [[ "$argument" == "--status" ]]; then
+    get_platform_path "$arch"
+    get_status
+    exit 0
+  elif [[ "$argument" == "--state" ]]; then
+    get_running_state
+    exit 0
+  elif [[ -n "$argument" ]]; then
+    usage
+    exit 1
+  fi
+
+  if [[ ! -f "$file" ]]; then
+    die "Cannot find .so file: $file"
+  fi
+
+  get_platform_path "$arch"
+
+  if [[ -z "$PLATFORM_SPECIFIC_LIBRARY_PATH_NAME" ]]; then
+    die "Cannot find Widevine CDM platform path for $arch"
+  fi
+
+  assert_md5sum "$file" "$arch"
+
+  clean_old_file
+
+  install "$file"
+}
+
+main "$@"
