@@ -17,4 +17,10 @@ DEPEND="${RDEPEND}"
 src_install() {
 	exeinto /usr/bin
 	doexe "${FILESDIR}"/enable_libwidevine
+
+  insinto /etc/init
+  doins "${FILESDIR}"/init/fydeos-collect-log.conf
+
+  exeinto /usr/share/cros/init
+  doexe "${FILESDIR}"/scripts/collect_fydeos_log.sh
 }
