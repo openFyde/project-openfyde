@@ -62,11 +62,33 @@ collect() {
   echo -e "$prefix\n$result\n$suffix\n" >> "$TARGET_FILE"
 }
 
+declare -r LOCKFILE="/tmp/fydeos_log.lock"
+declare -r LOCKFD="99"
+
+lock() {
+  flock -xn "$LOCKFD"
+}
+
+unlock() {
+  flock -u "$LOCKFD"
+  flock -xn "$LOCKFD" && rm -f "$LOCKFILE"
+}
+
+assert_single_instance() {
+  eval "exec $LOCKFD>\"$LOCKFILE\"";
+  trap unlock EXIT
+  if ! lock; then
+    echo "ERROR: only one instance can run at a time." >&2
+    exit 1
+  fi
+}
+
 empty() {
   cat /dev/null > "$TARGET_FILE"
 }
 
 main() {
+  assert_single_instance
   empty
   collect license_id
   collect release
