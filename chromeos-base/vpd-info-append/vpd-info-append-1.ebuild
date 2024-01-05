@@ -4,7 +4,7 @@
 # Copyright (c) 2016-2018 The Flint OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="7"
+EAPI=7
 
 DESCRIPTION="Append nesseary infomation for session manager" 
 HOMEPAGE="http://www.flintos.io"
