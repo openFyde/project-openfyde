@@ -16,10 +16,18 @@ find_openfyde_patches() {
     local patches_dir="chromium-patches"
     local revert_search_dir=""
     local overlay_root=""
+    local skip_archero=false
     for overlay_root in ${BOARD_OVERLAY}; do
       revert_search_dir="$overlay_root $revert_search_dir"
+      if [ "$(basename $overlay_root)" == "project-arcplus" ]; then
+        skip_archero=true
+      fi
     done
     for overlay_root in $revert_search_dir; do
+      if [[ $skip_archero && $(basename $overlay_root) == "project-archero" ]]; then
+        einfo "skip archero patches"
+        continue
+      fi
       full_patches_dir="${overlay_root}/${patches_dir}"
       einfo "find: $full_patches_dir"
       if [[ -d $full_patches_dir ]]; then
