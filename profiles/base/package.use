@@ -1,1 +1,2 @@
+app-editors/vim cros_host
 chromeos-base/chromeos-login login_enable_crosh_sudo
