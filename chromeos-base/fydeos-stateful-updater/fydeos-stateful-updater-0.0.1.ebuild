@@ -4,7 +4,7 @@
 EAPI=7
 
 DESCRIPTION="Fydeos stateful updater"
-LICENSE="BSD-Google"
+LICENSE="BSD-Fyde"
 SLOT="0"
 KEYWORDS="*"
 IUSE=""

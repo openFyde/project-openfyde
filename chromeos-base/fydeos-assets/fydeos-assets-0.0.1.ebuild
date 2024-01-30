@@ -6,7 +6,7 @@ EAPI=7
 inherit toolchain-funcs
 
 DESCRIPTION="Fydeos-specific assets"
-LICENSE="BSD-Google"
+LICENSE="BSD-Fyde"
 HOMEPAGE="https://fydeos.io"
 SLOT="0"
 KEYWORDS="*"

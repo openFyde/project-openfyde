@@ -6,7 +6,7 @@ inherit chrome-dev-flag
 DESCRIPTION="append chrome command line flags"
 HOMEPAGE="https://fydeos.io"
 
-LICENSE="BSD-Google"
+LICENSE="BSD-Fyde"
 SLOT="0"
 KEYWORDS="*"
 IUSE="force-chinese"

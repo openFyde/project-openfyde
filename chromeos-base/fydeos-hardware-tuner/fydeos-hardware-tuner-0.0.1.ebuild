@@ -10,7 +10,7 @@ inherit git-r3
 DESCRIPTION="Tunning system driver and configrations in console mode"
 HOMEPAGE="https://fydeos.io"
 
-LICENSE="BSD-Google"
+LICENSE="BSD-Fyde"
 SLOT="0"
 KEYWORDS="*"
 IUSE=""

@@ -6,7 +6,7 @@ EAPI=7
 DESCRIPTION="FydeOS remote helper"
 HOMEPAGE="https://fydeos.io"
 
-LICENSE="BSD-Google"
+LICENSE="BSD-Fyde"
 SLOT="0"
 KEYWORDS="*"
 IUSE=""
