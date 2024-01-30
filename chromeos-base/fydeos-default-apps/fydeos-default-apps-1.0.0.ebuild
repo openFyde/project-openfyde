@@ -7,7 +7,7 @@
 EAPI=7
 
 DESCRIPTION="Prepare fydeos default apps"
-HOMEPAGE="http://www.flintos.io"
+HOMEPAGE="https://fydeos.io"
 
 LICENSE="BSD-Fyde"
 SLOT="0"

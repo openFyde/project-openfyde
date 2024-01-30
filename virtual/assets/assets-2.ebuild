@@ -7,9 +7,9 @@
 EAPI=7
 
 DESCRIPTION="Additional assets for a given target; common assets should go in chromeos-assets."
-HOMEPAGE="http://www.flintos.io/"
+HOMEPAGE="https://fydeos.io/"
 
-LICENSE="BSD-Google"
+LICENSE="BSD-Fyde"
 SLOT="0"
 KEYWORDS="*"
 IUSE=""

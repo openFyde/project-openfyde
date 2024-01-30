@@ -7,9 +7,9 @@
 EAPI=7
 
 DESCRIPTION="Append nesseary infomation for session manager" 
-HOMEPAGE="http://www.flintos.io"
+HOMEPAGE="https://fydeos.io"
 
-LICENSE="GPL-2"
+LICENSE="BSD-Fyde"
 SLOT="0"
 KEYWORDS="*"
 IUSE=""
