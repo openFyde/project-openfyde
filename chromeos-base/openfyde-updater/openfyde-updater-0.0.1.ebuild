@@ -6,7 +6,7 @@ EAPI=7
 inherit user
 
 DESCRIPTION="empty project"
-HOMEPAGE="http://fydeos.com"
+HOMEPAGE="https://fydeos.io"
 
 LICENSE="BSD-Fyde"
 SLOT="0"

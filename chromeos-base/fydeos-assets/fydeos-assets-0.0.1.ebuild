@@ -7,6 +7,7 @@ inherit toolchain-funcs
 
 DESCRIPTION="Fydeos-specific assets"
 LICENSE="BSD-Google"
+HOMEPAGE="https://fydeos.io"
 SLOT="0"
 KEYWORDS="*"
 IUSE=""

@@ -9,7 +9,7 @@ EGIT_BRANCH="r108-dev"
 
 inherit git-r3 golang-build
 DESCRIPTION="fydeos shell daemon in golang, the replacement of python version"
-HOMEPAGE="http://fydeos.com"
+HOMEPAGE="https://fydeos.io"
 
 LICENSE="BSD-Google"
 SLOT="0"

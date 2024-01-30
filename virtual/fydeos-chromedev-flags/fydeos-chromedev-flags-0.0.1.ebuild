@@ -4,7 +4,7 @@
 EAPI=7
 
 DESCRIPTION="Chrome dev flags"
-HOMEPAGE="http://fydeos.com"
+HOMEPAGE="https://fydeos.io"
 
 LICENSE="BSD-Google"
 SLOT="0"

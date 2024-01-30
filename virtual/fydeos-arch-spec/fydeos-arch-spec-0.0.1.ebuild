@@ -4,7 +4,7 @@
 EAPI=7
 
 DESCRIPTION="empty project"
-HOMEPAGE="http://fydeos.com"
+HOMEPAGE="https://fydeos.io"
 
 LICENSE="BSD"
 SLOT="0"

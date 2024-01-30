@@ -4,7 +4,7 @@
 EAPI=7
 
 DESCRIPTION="add power wash command to usr/local/sbin"
-HOMEPAGE="http://fydeos.com"
+HOMEPAGE="https://fydeos.io"
 
 LICENSE="BSD-Google"
 SLOT="0"

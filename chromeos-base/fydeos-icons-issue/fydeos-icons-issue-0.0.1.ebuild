@@ -4,7 +4,7 @@
 EAPI=7
 
 DESCRIPTION="Fix os-settings and camera app icons after 12.2 OTA"
-HOMEPAGE="http://fydeos.com"
+HOMEPAGE="https://fydeos.io"
 
 LICENSE="BSD-Google"
 SLOT="0"
