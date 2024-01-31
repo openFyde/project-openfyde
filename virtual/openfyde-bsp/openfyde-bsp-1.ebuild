@@ -31,6 +31,7 @@ RDEPEND="
     sys-apps/usb-modeswitch-data
     chromeos-base/openfyde-updater
     chromeos-base/openfyde-utils
+    chromeos-base/fydeos-scripts-mounter
 "
 DEPEND="
     ${RDEPEND}
