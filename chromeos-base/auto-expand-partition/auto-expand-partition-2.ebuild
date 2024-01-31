@@ -5,7 +5,8 @@ EAPI=7
 
 DESCRIPTION="Auto expand stateful partition on first boot"
 
-LICENSE="BSD-Google"
+LICENSE="BSD-Fyde"
+HOMEPAGE="https://fydeos.io"
 SLOT="0"
 KEYWORDS="*"
 IUSE=""
