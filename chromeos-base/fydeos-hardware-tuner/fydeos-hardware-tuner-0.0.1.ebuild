@@ -20,13 +20,20 @@ RDEPEND=""
 DEPEND="${RDEPEND}"
 
 src_install() {
-  insinto /usr/share/hwtuner-script
+  SRC_TARGET_DIR="/mnt/stateful_partition/unencrypted/preserve/fydeos_scripts/hwtuner-script"
+  EXE_TARGET_DIR="/usr/share/hwtuner-script" # mount --bind -o ro,exec "$SRC_TARGET_DIR" "$EXE_TARGET_DIR
+
+  insinto "$SRC_TARGET_DIR"
   doins -r lib
   doins -r menu
-  exeinto /usr/share/hwtuner-script
+  exeinto "$SRC_TARGET_DIR"
   doexe hwtuner
   doexe hwtuner_info
-  dosym /usr/share/hwtuner-script/hwtuner /usr/bin/hwtuner
+
+  keepdir "$EXE_TARGET_DIR"
+
+  dosym "$EXE_TARGET_DIR/hwtuner" /usr/bin/hwtuner
+
   dosym /mnt/stateful_partition/unencrypted/gesture/55-alt-touchpad-cmt.conf /etc/gesture/55-alt-touchpad-cmt.conf
   dosym /mnt/stateful_partition/unencrypted/gesture/60-user-defined-devices.conf /etc/gesture/60-user-defined-devices.conf
 }
