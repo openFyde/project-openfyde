@@ -19,16 +19,21 @@ RDEPEND=""
 
 DEPEND="${RDEPEND}"
 
-src_install() {
-  SRC_TARGET_DIR="/mnt/stateful_partition/unencrypted/preserve/fydeos_scripts/hwtuner-script"
-  EXE_TARGET_DIR="/usr/share/hwtuner-script" # mount --bind -o ro,exec "$SRC_TARGET_DIR" "$EXE_TARGET_DIR
-
-  insinto "$SRC_TARGET_DIR"
+install_scripts() {
+  local dir="$1"
+  insinto "$dir"
   doins -r lib
   doins -r menu
-  exeinto "$SRC_TARGET_DIR"
+  exeinto "$dir"
   doexe hwtuner
   doexe hwtuner_info
+}
+
+src_install() {
+  EXE_TARGET_DIR="/usr/share/hwtuner-script" # mount --bind -o ro,exec "$SRC_TARGET_DIR" "$EXE_TARGET_DIR
+
+  install_scripts "/mnt/stateful_partition/unencrypted/preserve/fydeos_scripts/hwtuner-script"
+  install_scripts "/usr/share/fydeos_shell/.fydeos_scripts/hwtuner-script"
 
   keepdir "$EXE_TARGET_DIR"
 
