@@ -9,7 +9,7 @@ LICENSE="BSD-Fyde"
 HOMEPAGE="https://fydeos.io"
 SLOT="0"
 KEYWORDS="*"
-IUSE=""
+IUSE="force"
 
 DEPEND=""
 RDEPEND="${DEPEND}
@@ -23,5 +23,9 @@ src_install() {
   exeinto "/usr/sbin"
   doexe ${FILESDIR}/expand-partition.sh	
   insinto "/etc/init"
-  doins ${FILESDIR}/auto-expand-partition.conf
+  if use force; then
+    newins ${FILESDIR}/auto-expand-partition.force.conf auto-expand-partition.conf
+  else
+    doins ${FILESDIR}/auto-expand-partition.conf
+  fi
 }
