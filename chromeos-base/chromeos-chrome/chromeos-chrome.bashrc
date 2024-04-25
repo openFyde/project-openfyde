@@ -21,7 +21,6 @@ find_openfyde_patches() {
       revert_search_dir="$overlay_root $revert_search_dir"
       if [[ $(basename "$overlay_root") = "project-arcplus" ]]; then
         skip_archero=true
-        break
       fi
     done
     for overlay_root in $revert_search_dir; do
