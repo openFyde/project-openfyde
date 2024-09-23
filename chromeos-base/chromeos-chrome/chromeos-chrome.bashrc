@@ -73,6 +73,9 @@ unpatches_openfyde() {
 unpatches_when_aborted() {
   trap 'unpatches_openfyde; trap - SIGINT SIGTERM SIGQUIT ERR' SIGINT SIGTERM SIGQUIT ERR # avoid unpatches multiple times
 }
+unpatches_when_aborted_ignore_err() {
+  trap 'unpatches_openfyde; trap - SIGINT SIGTERM SIGQUIT' SIGINT SIGTERM SIGQUIT # avoid unpatches multiple times
+}
 
 cros_pre_src_prepare_patches() {
   einfo "Enter openfyde patches.."
@@ -86,7 +89,7 @@ cros_pre_src_prepare_patches() {
 }
 
 cros_pre_src_configure_setup_unpatches_hook() {
-  unpatches_when_aborted
+  unpatches_when_aborted_ignore_err
 }
 
 cros_pre_src_compile_setup_unpatches_hook() {
