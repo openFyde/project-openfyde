@@ -71,7 +71,7 @@ unpatches_openfyde() {
 }
 
 unpatches_when_aborted() {
-  trap 'unpatches_openfyde; trap - SIGINT SIGTERM SIGQUIT ERR' SIGINT SIGTERM SIGQUIT ERR # avoid unpatches multiple times
+  trap 'unpatches_openfyde; trap - SIGINT SIGTERM SIGQUIT ERR EXIT' SIGINT SIGTERM SIGQUIT ERR EXIT # avoid unpatches multiple times
 }
 unpatches_when_aborted_ignore_err() {
   trap 'unpatches_openfyde; trap - SIGINT SIGTERM SIGQUIT' SIGINT SIGTERM SIGQUIT # avoid unpatches multiple times
@@ -79,28 +79,24 @@ unpatches_when_aborted_ignore_err() {
 
 cros_pre_src_prepare_patches() {
   einfo "Enter openfyde patches.."
+  unpatches_openfyde
+  mark_patched
   pushd "${CHROME_ROOT}"/src > /dev/null || die "Cannot chdir to ${CHROME_ROOT}/src"
   find_openfyde_patches | while read -r p; do
     einfo "Apply:${p}"
-    patch -p1 -f -s -g0 --no-backup-if-mismatch -r - < "${p}" || { unpatches_openfyde; die; }
+    patch -p1 -f -s -g0 --no-backup-if-mismatch -r - < "${p}" || { unpatches_openfyde; die "failed to patch ${p}"; }
+    #patch -p1 < "${p}" || { unpatches_openfyde; die "patch:$p"; }
+    #eapply ${p} || { unpatches_openfyde; die "patch:${p}"; }
   done
   popd || die "Cannot popd from ${CHROME_ROOT}/src"
-  mark_patched
 }
 
-cros_pre_src_configure_setup_unpatches_hook() {
-  unpatches_when_aborted_ignore_err
-}
-
-cros_pre_src_compile_setup_unpatches_hook() {
+cros_pre_src_compile_setup_trap() {
   unpatches_when_aborted
 }
 
-cros_post_src_compile_setup_unpatches_hook() {
-  unpatches_openfyde
-}
-
 cros_post_src_install_remove_widevine_placeholder() {
+  unpatches_openfyde
   local WIDEVINE_DIR="$D_CHROME_DIR/WidevineCdm"
   if [[ -d "$WIDEVINE_DIR" ]]; then
     einfo "Remove WidevineCdm placeholder"

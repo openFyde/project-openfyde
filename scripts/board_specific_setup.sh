@@ -2,8 +2,6 @@
 #
 . $(dirname ${BASH_SOURCE[0]})/fydeos_version.sh
 
-CHROMEOS_ARC_ANDROID_SDK_VERSION=28
-CHROMEOS_ARC_VERSION=10061641
 CHROMEOS_VERSION_AUSERVER=https://up.fydeos.io/service/update2
 CHROMEOS_VERSION_DEVSERVER=https://devserver.fydeos.io:9999
 CHROMEOS_VERSION_TRACK=stable-channel
