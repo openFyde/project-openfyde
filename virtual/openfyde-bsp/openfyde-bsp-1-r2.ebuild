@@ -12,7 +12,7 @@ HOMEPAGE="https://fydeos.io"
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="*"
-IUSE=""
+IUSE="cellular"
 
 RDEPEND="
     chromeos-base/fydeos-console-issue
@@ -32,6 +32,7 @@ RDEPEND="
     chromeos-base/openfyde-updater
     chromeos-base/openfyde-utils
     chromeos-base/fydeos-scripts-mounter
+    cellular? ( net-misc/modemmanager-fcc-unlock )
 "
 DEPEND="
     ${RDEPEND}
