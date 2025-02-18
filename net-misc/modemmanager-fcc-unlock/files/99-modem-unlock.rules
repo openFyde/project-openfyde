@@ -1,0 +1,1 @@
+ACTION=="add", ENV{ID_MM_DEVICE_IS_MODEM}=="1", ATTRS{idProduct}=="????", ATTRS{idVendor}=="????", RUN+="/usr/sbin/unlockfcc.sh %k $attr{idVendor}:$attr{idProduct}"
