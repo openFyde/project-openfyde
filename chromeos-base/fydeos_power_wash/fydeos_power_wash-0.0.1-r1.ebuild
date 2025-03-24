@@ -1,0 +1,1 @@
+fydeos_power_wash-0.0.1.ebuild
