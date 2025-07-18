@@ -89,6 +89,43 @@ cros_pre_src_prepare_patches() {
     #eapply ${p} || { unpatches_openfyde; die "patch:${p}"; }
   done
   popd || die "Cannot popd from ${CHROME_ROOT}/src"
+
+	einfo "Add google/fydoes api keys..."
+	add_api_keys() {
+	  # awk script to extract the values out of the file.
+	  local EXTRACT="{ gsub(/[',]/, \"\", \$2); print \$2 }"
+	  local api_key=$(awk "/google_api_key/ ${EXTRACT}" "$1")
+	  local client_id=$(awk "/google_default_client_id/ ${EXTRACT}" "$1")
+	  local client_secret=$(awk "/google_default_client_secret/ ${EXTRACT}" "$1")
+	  local fydeos_api_key=$(awk "/fydeos_api_key/ ${EXTRACT}" "$1")
+	  local fydeos_client_id=$(awk "/fydeos_default_client_id/ ${EXTRACT}" "$1")
+	  local fydeos_client_secret=$(awk "/fydeos_default_client_secret/ ${EXTRACT}" "$1")
+
+	  BUILD_STRING_ARGS+=(
+	    "google_api_key=${api_key}"
+	    "google_default_client_id=${client_id}"
+	    "google_default_client_secret=${client_secret}"
+	  )
+
+    if [ -n "$fydeos_api_key" ]; then
+      BUILD_STRING_ARGS+=(
+        "fydeos_api_key=${fydeos_api_key}"
+        "fydeos_default_client_id=${fydeos_client_id}"
+        "fydeos_default_client_secret=${fydeos_client_secret}"
+      )
+    fi
+	}
+
+	local WHOAMI=$(whoami)
+	local PRIVATE_OVERLAYS_DIR=/home/${WHOAMI}/trunk/src/private-overlays
+  local GAPI_CONFIG_FILE=${PRIVATE_OVERLAYS_DIR}/chromeos-overlay/googleapikeys
+  if [[ ! -f "${GAPI_CONFIG_FILE}" ]]; then
+    # Then developer credentials.
+    GAPI_CONFIG_FILE=/home/${WHOAMI}/.googleapikeys
+  fi
+  if [[ -f "${GAPI_CONFIG_FILE}" ]]; then
+    add_api_keys "${GAPI_CONFIG_FILE}"
+  fi
 }
 
 cros_pre_src_compile_setup_trap() {
