@@ -23,4 +23,7 @@ src_install() {
 
   exeinto /usr/share/cros/init
   doexe "${FILESDIR}"/scripts/collect_fydeos_log.sh
+
+  exeinto /usr/sbin
+  doexe "${FILESDIR}"/scripts/fydeos_hardware_id
 }

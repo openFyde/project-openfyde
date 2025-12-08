@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+set -o errexit
+
+declare -r LSB_RELEASE_FILE="/etc/lsb-release"
+declare -r BOARD_NAME_KEY="CHROMEOS_RELEASE_BOARD"
+
+get_board_name() {
+  grep "$BOARD_NAME_KEY" "$LSB_RELEASE_FILE" | cut -d'=' -f2
+}
+
+declare -r SBC_BOARD_NAME_LIST=(
+  "rpi4"
+  "rpi5"
+  "orangepi5"
+  "rock5b"
+  "edge2"
+)
+
+is_sbc_based_on_board_name() {
+  local board="$1"
+  for sbc in "${SBC_BOARD_NAME_LIST[@]}"; do
+    if [[ "$board" == "$sbc"* ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+use_board_name_if_sbc() {
+  local board="$1"
+  if is_sbc_based_on_board_name "$board"; then
+    echo "$board"
+  fi
+}
+
+is_product_name_valid() {
+  local name="$1"
+  [[ -n "$name" ]] && [[ ! "$name" == "To be filled by O.E.M."* ]]
+}
+
+declare -r POSSIBLE_PRODUCT_NAME_KEYS=(
+  "product_name"
+  "board_name"
+  "product_family"
+  "sys_vendor"
+  "board_vendor"
+)
+
+get_product_name() {
+  local name=""
+  for key in "${POSSIBLE_PRODUCT_NAME_KEYS[@]}"; do
+    name=$(cat "/sys/devices/virtual/dmi/id/$key")
+    if is_product_name_valid "$name"; then
+      echo "$name"
+      return
+    fi
+  done
+}
+
+output_then_exit_if_valid() {
+  local class="$1"
+  if [[ -n "$class" ]]; then
+    echo "$class"
+    exit 0
+  fi
+}
+
+main() {
+  local class=""
+  local board=""
+  board=$(get_board_name)
+
+  class=$(use_board_name_if_sbc "$board")
+  output_then_exit_if_valid "$class"
+
+  class=$(get_product_name)
+  output_then_exit_if_valid "$class"
+
+  # use board name as last resort
+  output_then_exit_if_valid "$board"
+}
+
+main "$@"
