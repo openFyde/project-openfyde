@@ -7,6 +7,17 @@ license_id() {
   "$bin" id
 }
 
+device_id() {
+  local file="/var/lib/fyde_device_id/fyde_device_id"
+  local bin="/usr/bin/fyde_device_id"
+  if [[ ! -f "$file" ]]; then
+    "$bin"
+  fi
+  if [[  -f "$file" ]]; then
+    cat "$file"
+  fi
+}
+
 release() {
   local lsb_release="/etc/lsb-release"
   local os_release=""
@@ -91,6 +102,7 @@ main() {
   assert_single_instance
   empty
   collect license_id
+  collect device_id
   collect release
   collect board
   collect cpu
