@@ -78,17 +78,19 @@ unpatches_when_aborted_ignore_err() {
 }
 
 cros_pre_src_prepare_patches() {
-  einfo "Enter openfyde patches.."
-  unpatches_openfyde
-  mark_patched
-  pushd "${CHROME_ROOT}"/src > /dev/null || die "Cannot chdir to ${CHROME_ROOT}/src"
-  find_openfyde_patches | while read -r p; do
-    einfo "Apply:${p}"
-    patch -p1 -f -s -g0 --no-backup-if-mismatch -r - < "${p}" || { unpatches_openfyde; die "failed to patch ${p}"; }
-    #patch -p1 < "${p}" || { unpatches_openfyde; die "patch:$p"; }
-    #eapply ${p} || { unpatches_openfyde; die "patch:${p}"; }
-  done
-  popd || die "Cannot popd from ${CHROME_ROOT}/src"
+  if [ "$PV" != "9999" ]; then
+    einfo "Enter openfyde patches.."
+    unpatches_openfyde
+    mark_patched
+    pushd "${CHROME_ROOT}"/src > /dev/null || die "Cannot chdir to ${CHROME_ROOT}/src"
+    find_openfyde_patches | while read -r p; do
+      einfo "Apply:${p}"
+      patch -p1 -f -s -g0 --no-backup-if-mismatch -r - < "${p}" || { unpatches_openfyde; die "failed to patch ${p}"; }
+      #patch -p1 < "${p}" || { unpatches_openfyde; die "patch:$p"; }
+      #eapply ${p} || { unpatches_openfyde; die "patch:${p}"; }
+    done
+    popd || die "Cannot popd from ${CHROME_ROOT}/src"
+  fi
 
   einfo "Add google/fydoes api keys..."
   add_api_keys() {
@@ -124,10 +126,18 @@ cros_pre_src_prepare_patches() {
 }
 
 cros_pre_src_compile_setup_trap() {
+  if [ "$PV" == "9999" ]; then
+    einfo "$P skip trap."
+		return
+  fi
   unpatches_when_aborted
 }
 
 cros_post_src_install_remove_widevine_placeholder() {
+  if [ "$PV" == "9999" ]; then
+    einfo "$P skip remove widevine placeholder."
+		return
+  fi
   unpatches_openfyde
   local WIDEVINE_DIR="$D_CHROME_DIR/WidevineCdm"
   if [[ -d "$WIDEVINE_DIR" ]]; then

@@ -20,6 +20,7 @@ S=${FILESDIR}
 src_install() {
   exeinto /usr/sbin
   doexe ${FILESDIR}/unlockfcc.sh
+  doexe ${FILESDIR}/switch_modem_to_mbim_mode.sh
   insinto /lib/udev/rules.d
   doins ${FILESDIR}/99-modem-unlock.rules
 }

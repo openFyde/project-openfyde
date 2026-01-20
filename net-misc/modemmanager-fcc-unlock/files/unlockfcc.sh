@@ -7,6 +7,16 @@ is_unlocked() {
   [ $? -eq 0 ]
 }
 
+is_quectel() {
+  local usb_dev=$(lsusb -d 2c7c:)
+  [ -n "$usb_dev" ]
+}
+
+modem_not_in_mbim_mode() {
+  local cdc_dev=$(ls /dev/cdc-* 2>/dev/null)
+  [ -z "$cdc_dev" ]
+}
+
 main() {
   local dev=$(basename $1)
   local id=$2
@@ -15,6 +25,8 @@ main() {
   if is_unlocked $token; then
     return
   fi
+  is_quectel && modem_not_in_mbim_mode \
+    &&  /usr/sbin/switch_modem_to_mbim_mode.sh /dev/$dev >> $TMP
   if [ -a $unlock ]; then
     $unlock fake_path $dev
     if [ $? -eq 0 ]; then
