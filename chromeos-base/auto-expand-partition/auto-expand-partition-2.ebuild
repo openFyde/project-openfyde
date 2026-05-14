@@ -13,7 +13,7 @@ IUSE="force"
 
 DEPEND=""
 RDEPEND="${DEPEND}
-	sys-apps/gptfdisk[-ncurses]
+	sys-apps/gptfdisk
 "
 
 S=${WORKDIR}
@@ -21,7 +21,7 @@ S=${WORKDIR}
 src_install() {
 	# Install upstart service
   exeinto "/usr/sbin"
-  doexe ${FILESDIR}/expand-partition.sh	
+  doexe ${FILESDIR}/expand-partition.sh
   insinto "/etc/init"
   if use force; then
     newins ${FILESDIR}/auto-expand-partition.force.conf auto-expand-partition.conf
