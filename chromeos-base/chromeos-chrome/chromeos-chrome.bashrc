@@ -20,12 +20,12 @@ find_openfyde_patches() {
     for overlay_root in ${BOARD_OVERLAY}; do
       revert_search_dir="$overlay_root $revert_search_dir"
       if [[ $(basename "$overlay_root") = "project-arcplus" ]]; then
-        skip_archero=true
+        skip_fydroid=true
       fi
     done
     for overlay_root in $revert_search_dir; do
-      if [[ "$skip_archero" = "true" ]] && [[ $(basename "$overlay_root") = "project-archero" ]]; then
-        einfo "skip archero patches"
+      if [[ "$skip_fydroid" = "true" ]] && [[ $(basename "$overlay_root") = "project-fydroid" ]]; then
+        einfo "skip fydroid patches"
         continue
       fi
       full_patches_dir="${overlay_root}/${patches_dir}"
