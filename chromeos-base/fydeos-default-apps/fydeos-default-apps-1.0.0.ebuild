@@ -41,7 +41,6 @@ custom_ins() {
 src_install(){
   insinto /mnt/stateful_partition/unencrypted/import_extensions
   doins ${FILESDIR}/extensions/*.crx
-  use fydeos_arc && doins ${FILESDIR}/arc-extensions/*.crx
   insinto /usr/share/import_extensions/validation
   doins ${FILESDIR}/validations/*
   insinto /usr/share/chromium/extensions
@@ -51,5 +50,4 @@ src_install(){
     fi
     custom_ins $cnf
   done
-  use fydeos_arc && custom_ins ${FILESDIR}/arc-extensions/*.json
 }
