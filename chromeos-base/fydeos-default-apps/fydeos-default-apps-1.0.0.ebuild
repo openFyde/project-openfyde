@@ -12,7 +12,7 @@ HOMEPAGE="https://fydeos.io"
 LICENSE="BSD-Fyde"
 SLOT="0"
 KEYWORDS="*"
-IUSE="fydeos_arc +fydeos_store -fydeos_com"
+IUSE="fydeos_arc -fydeos_store -fydeos_com"
 S="${WORKDIR}"
 
 ARC_SETTING_ID="iakadpgajjigiaojnbdmodlngmbkfhag"
