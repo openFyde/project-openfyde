@@ -5,7 +5,7 @@ EAPI=7
 
 
 EGIT_REPO_URI="${OPENFYDE_GIT_HOST_URL}/fydeos-shell-daemon-go.git"
-EGIT_BRANCH="r108-dev"
+EGIT_BRANCH="r150-dev"
 
 inherit git-r3 golang-build
 DESCRIPTION="fydeos shell daemon in golang, the replacement of python version"
