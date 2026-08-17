@@ -12,11 +12,12 @@ HOMEPAGE="https://fydeos.io"
 LICENSE="BSD-Fyde"
 SLOT="0"
 KEYWORDS="*"
-IUSE="fydeos_arc -fydeos_store -fydeos_com"
+IUSE="fydeos_arc -fydeos_store -fydeos_com fydeos"
 S="${WORKDIR}"
 
 ARC_SETTING_ID="iakadpgajjigiaojnbdmodlngmbkfhag"
 FYDEOS_STORE_ID="hidnajblbifdkmheebalalchohohmaef"
+RHYTHM_ID="nfglebjgiflmmcdddkbcbgmdkomlfcpa"
 
 RDEPEND=""
 # virtual/arc-plus
@@ -39,13 +40,32 @@ custom_ins() {
 }
 
 src_install(){
+  # FydeOS ships FydeRhythm as a built-in component IME; the store build shares
+  # its extension id, gets installed first and shadows the built-in one.
+  local crx val
   insinto /mnt/stateful_partition/unencrypted/import_extensions
-  doins ${FILESDIR}/extensions/*.crx
+  for crx in "${FILESDIR}"/extensions/*.crx; do
+    if use fydeos && [[ ${crx} == *${RHYTHM_ID}* ]]; then
+      continue
+    fi
+    doins "${crx}"
+  done
+  # Drop the checksum line as well: encrypted_import aborts the whole import
+  # when a listed crx is missing.
   insinto /usr/share/import_extensions/validation
-  doins ${FILESDIR}/validations/*
+  for val in "${FILESDIR}"/validations/*; do
+    if use fydeos; then
+      sed "/${RHYTHM_ID}/d" "${val}" > "${T}/${val##*/}" || die "cannot filter ${val}"
+      val="${T}/${val##*/}"
+    fi
+    doins "${val}"
+  done
   insinto /usr/share/chromium/extensions
   for cnf in `ls ${FILESDIR}/extensions/*.json`; do
     if  ! use fydeos_store  && [ -n "`echo $cnf |grep ${FYDEOS_STORE_ID}`" ]; then
+      continue
+    fi
+    if use fydeos && [[ ${cnf} == *${RHYTHM_ID}* ]]; then
       continue
     fi
     custom_ins $cnf
