@@ -54,6 +54,15 @@ is_partition() {
  [ -n "$(partx -s -o nr -n ${partnum}:${partnum} -g $disk)" ]
 }
 
+# Size of a block device in 512-byte sectors.
+# NB: `partx -b -o size` reports bytes, not sectors, so it must not be used here.
+dev_sectors() {
+  if [ -x /sbin/blockdev ]; then
+    /sbin/blockdev --getsz "$1" 2>/dev/null && return
+  fi
+  cat "/sys/class/block/$(basename "$1")/size" 2>/dev/null
+}
+
 expand_partition() {
   part=$1
   disk=$(parse_disk_dev $part)
@@ -61,11 +70,40 @@ expand_partition() {
   start_sec=$(partx -s -b -g -o start $part)
   last_byte=$(lsblk -b -d -n -o size $disk)
   last_sec=$(($last_byte / 512))
+  cur_sec=$(dev_sectors $part)
+
+  # Bail out before doing arithmetic on empty values, which would otherwise
+  # abort the script with a shell syntax error.
+  if [ -z "$start_sec" ] || [ -z "$last_byte" ] || [ -z "$cur_sec" ]; then
+    echo "Cannot determine geometry for $part (start='$start_sec' disk='$last_byte' cur='$cur_sec');"
+    echo "refusing to modify the partition table."
+    return 0
+  fi
+
+  new_sec=$(($last_sec - $start_sec - 10240))
+
+  # Never shrink a partition.
+  #
+  # cgpt will happily record a size smaller than the filesystem already living
+  # in the partition, and resize2fs cannot shrink a mounted filesystem, so the
+  # shrink silently sticks. The next boot then fails with
+  #   EXT4-fs (sdaN): bad geometry: block count X exceeds size of device (Y)
+  # which fails the stateful mount and sends the device into clobber/powerwash.
+  #
+  # This happens whenever the disk has less than the 10240-sector (5 MiB) tail
+  # reserve free behind the partition -- e.g. an image written to a disk barely
+  # larger than itself, where there is nothing to expand into in the first place.
+  if [ "$new_sec" -le "$cur_sec" ]; then
+    echo "No free space behind $part (current ${cur_sec} sectors, computed ${new_sec}); nothing to expand."
+    return 0
+  fi
+
+  echo "Expanding $part: ${cur_sec} -> ${new_sec} sectors"
   echo "Check disk:$disk partition table..."
   sgdisk -e $disk
   echo "Done"
   echo "Modify partition $partnum..."
-  cgpt add -i $partnum -s $(($last_sec - $start_sec - 10240)) $disk
+  cgpt add -i $partnum -s $new_sec $disk
   echo "Done"
   echo "Notify kernel..."
   partx -u $part
