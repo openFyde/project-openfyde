@@ -10,6 +10,7 @@
 find_openfyde_patches() {
   local full_patches_dir=""
   local patches_dirs=()
+  local chrome_major="${PV%%.*}"
   full_patches_dir=${CHROMIUM_PATCHES_PATH}
 
   if [[ -z "$full_patches_dir" ]] || [[ ! -d "${full_patches_dir}" ]]; then
@@ -30,7 +31,7 @@ find_openfyde_patches() {
       fi
       full_patches_dir="${overlay_root}/${patches_dir}"
       einfo "find: $full_patches_dir"
-      if [[ -d $full_patches_dir ]]; then
+      if [[ -d $full_patches_dir ]] || [[ -d "${full_patches_dir}-${chrome_major}" ]]; then
         patches_dirs+=($full_patches_dir)
       fi
     done
@@ -38,11 +39,18 @@ find_openfyde_patches() {
     patches_dirs+=($full_patches_dir)
   fi
 
+  # A same-named file under chromium-patches-<major>/ overrides the base
+  # one, so one overlay branch can serve two chrome majors at once.
   local patch_dir=""
   for patch_dir in ${patches_dirs[@]}; do
+    local -A by_name=()
     local patch_file=""
-    for patch_file in `find "${patch_dir}" -maxdepth 1 -name '*.patch' | sort -d`; do
-      echo $patch_file
+    for patch_file in `find "${patch_dir}" "${patch_dir}-${chrome_major}" -maxdepth 1 -name '*.patch' 2>/dev/null | sort -d`; do
+      by_name[$(basename "${patch_file}")]="${patch_file}"
+    done
+    local name=""
+    for name in $(printf '%s\n' "${!by_name[@]}" | sort -d); do
+      echo "${by_name[$name]}"
     done
   done
 }
@@ -63,7 +71,9 @@ unpatches_openfyde() {
   fi
   einfo "Revert openfyde patches.."
   pushd "${CHROME_ROOT}"/src > /dev/null || die "Cannot chdir to ${CHROME_ROOT}/src"
-  find_openfyde_patches | sort -r | while read -r p; do
+  # Exact reverse of the apply order; sorting paths breaks once a versioned
+  # override dir sits between base-dir entries.
+  find_openfyde_patches | tac | while read -r p; do
     patch -R -p1 -f -s -g0 --no-backup-if-mismatch -r - < "${p}" || true # ignore reverse patch failure.
   done
   popd || die "Cannot popd from ${CHROME_ROOT}/src"
@@ -123,6 +133,16 @@ cros_pre_src_prepare_patches() {
   if [[ -f "${GAPI_CONFIG_FILE}" ]]; then
     add_api_keys "${GAPI_CONFIG_FILE}"
   fi
+}
+
+# A die in src_configure (gn gen) must revert the tree too. An ERR/EXIT
+# trap is wrong here (ERR fires on any non-zero command, EXIT at the end
+# of the phase); portage's die hook runs only when the ebuild dies.
+cros_pre_src_configure_register_die_hook() {
+  if [ "$PV" == "9999" ]; then
+    return
+  fi
+  register_die_hook unpatches_openfyde
 }
 
 cros_pre_src_compile_setup_trap() {
