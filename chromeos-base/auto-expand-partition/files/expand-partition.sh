@@ -106,10 +106,39 @@ expand_partition() {
   cgpt add -i $partnum -s $new_sec $disk
   echo "Done"
   echo "Notify kernel..."
-  partx -u $part
-  echo "Done"
+  # Writing the table is not the same as the kernel believing it, and the
+  # difference is the whole bug this guards against: resize2fs sizes the
+  # filesystem from the *block device*, so against a stale partition size it
+  # grows the filesystem to the old size and reports success. The partition then
+  # reads 116 GiB while the filesystem inside it is still 6 GiB, and no later
+  # boot retries, because by then the kernel has read the new table at probe
+  # time and this function decides there is nothing left to expand.
+  #
+  # BLKPG, which is what partx issues, is the only form that can work here: on a
+  # USB boot / is another partition of this same disk, so BLKRRPART
+  # (blockdev --rereadpt) returns EBUSY. It is tried last all the same.
+  partx -u $part || true
+  if [ "$(dev_sectors $part)" -lt "$new_sec" ]; then
+    partx -u --nr $partnum $disk || true
+  fi
+  if [ "$(dev_sectors $part)" -lt "$new_sec" ]; then
+    blockdev --rereadpt $disk || true
+  fi
+
+  kern_sec=$(dev_sectors $part)
+  if [ -z "$kern_sec" ] || [ "$kern_sec" -lt "$new_sec" ]; then
+    echo "Kernel reports ${kern_sec:-unknown} sectors for $part, not ${new_sec}."
+    echo "Refusing to resize the filesystem onto a size the kernel does not have:"
+    echo "it would silently grow to the stale size and look like it worked."
+    return 1
+  fi
+  echo "Done (kernel reports ${kern_sec} sectors)"
+
   echo "Resize filesystem on partition..."
-  resize2fs $part
+  if ! resize2fs $part; then
+    echo "resize2fs failed on $part"
+    return 1
+  fi
   echo "Done"
 }
 

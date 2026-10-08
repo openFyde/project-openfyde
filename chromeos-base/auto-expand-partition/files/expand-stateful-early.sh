@@ -78,6 +78,61 @@ mark_expanded() {
   cgpt add -i "${partnum}" -A "$(( cur | EXPANDED_FLAG ))" "${disk}" 2>/dev/null
 }
 
+# The kernel's idea of how big the partition is, which is what resize2fs sizes
+# the filesystem from -- not the partition table's idea.
+dev_sectors() {
+  blockdev --getsz "${state_dev}" 2>/dev/null ||
+    cat "/sys/class/block/$(basename "${state_dev}")/size" 2>/dev/null
+}
+
+# Sectors the filesystem currently covers, or nothing when there is no ext4 to
+# ask: a migrated partition is a physical volume, not a filesystem.
+fs_sectors() {
+  dumpe2fs -h "${state_dev}" 2>/dev/null | awk -F: '
+    /^Block count:/ { c = $2 + 0 }
+    /^Block size:/  { b = $2 + 0 }
+    END { if (c > 0 && b > 0) print c * (b / 512) }'
+}
+
+# Does the filesystem fill the partition? This, and not the size of the
+# partition, is what "expanded" has to mean. Conflating the two is what let a
+# half-done job look finished: the partition read 116 GiB while the filesystem
+# inside it was still the 6 GiB the image shipped with, every write landed in
+# the 1.25 GiB that was left, and the encrypted /var hit ENOSPC with 65 bursts
+# of I/O errors behind it.
+fs_fills_partition() {
+  local fs part
+  fs="$(fs_sectors)"
+  part="$(cgpt show -i "${partnum}" -s "${disk}" 2>/dev/null)"
+  [ -n "${fs}" ] && [ -n "${part}" ] || return 1
+  # resize2fs rounds down to a whole block group -- 32768 blocks, 256 MiB at a
+  # 4 KiB block size -- so an exact match is not the test.
+  [ "$(( fs + 524288 ))" -ge "${part}" ]
+}
+
+# Sync the kernel's view of the partition, then grow the filesystem onto it.
+# Kept here rather than left to expand-partition.sh because that script
+# declines once the partition is already full size, which is exactly the state
+# an interrupted expansion leaves behind.
+resize_fs_to_partition() {
+  local want
+  want="$(cgpt show -i "${partnum}" -s "${disk}" 2>/dev/null)"
+  [ -n "${want}" ] || return 1
+
+  partx -u "${state_dev}" || true
+  if [ "$(dev_sectors)" -lt "${want}" ]; then
+    partx -u --nr "${partnum}" "${disk}" || true
+  fi
+  if [ "$(dev_sectors)" -lt "${want}" ]; then
+    blockdev --rereadpt "${disk}" || true
+  fi
+  if [ "$(dev_sectors)" -lt "${want}" ]; then
+    echo "kernel reports $(dev_sectors) sectors, not ${want}; not resizing"
+    return 1
+  fi
+  resize2fs "${state_dev}"
+}
+
 if [ -z "${disk}" ] || [ ! -b "${state_dev}" ]; then
   [ "$1" = "--is-expanded" ] && exit 1
   log "no stateful partition to expand (dev=${state_dev} disk=${disk})"
@@ -92,57 +147,60 @@ fi
 FORCE=""
 [ "$1" = "-f" ] && FORCE="-f"
 
-is_expanded && exit 0
-
-# Already a physical volume, so this board has migrated and the expansion
-# happened before that. Record it and never aim resize2fs at a PV.
+# A partition that has already been migrated is finished with all of this,
+# whatever else is true: it is a physical volume now rather than a filesystem,
+# and resize2fs must never be aimed at one. Asked before the done-test below,
+# which is about a filesystem that is no longer there.
 if command -v pvs >/dev/null 2>&1 && pvs "${state_dev}" >/dev/null 2>&1; then
   mark_expanded
   exit 0
 fi
 
-# Is there anything to gain? On a disk whose STATE already reaches the end there
-# is not, and saying so is what keeps this off an installed machine.
+# Done means the filesystem fills the partition. The bit on its own is not
+# enough: it only records that this ran, and it is set by a boot that grew the
+# partition even if the filesystem never followed.
+if is_expanded && fs_fills_partition; then
+  exit 0
+fi
+
+# How much room is there behind the partition? On a disk whose STATE already
+# reaches the end there is none, and saying so is what keeps this off an
+# installed machine.
 start_sec="$(cgpt show -i "${partnum}" -b "${disk}" 2>/dev/null)"
 cur_sec="$(cgpt show -i "${partnum}" -s "${disk}" 2>/dev/null)"
 disk_bytes="$(lsblk -b -d -n -o size "${disk}" 2>/dev/null)"
+room=yes
 if [ -n "${start_sec}" ] && [ -n "${cur_sec}" ] && [ -n "${disk_bytes}" ]; then
   if [ "${cur_sec}" -ge "$(( disk_bytes / 512 - start_sec - SLACK_SECTORS ))" ]; then
-    mark_expanded
-    exit 0
+    room=
   fi
 fi
 
-log "expanding ${state_dev} before it is mounted"
-/usr/sbin/expand-partition.sh ${FORCE} -d "${state_dev}" \
-  > /run/expand-stateful-early.log 2>&1
-
-# Whether that worked is decided by re-reading the partition table, not by the
-# exit status, because the exit status does not say. expand-partition.sh turns
-# down a disk it will not touch -- a fixed one, when --force was not given --
-# by printing "The system is not running from removable disk." and exiting
-# *zero*, which is its only explicit exit in the whole script. Believing that
-# status marked the partition expanded when nothing had been done, and since
-# this bit is precisely what stops the work being attempted again, such a disk
-# then never expanded for the rest of its life. The old code even said so in
-# the branch it could not reach.
-#
-# Nothing was ever mis-migrated by it, because the thinpool migration is gated
-# on the partition's real size and on the ext4 superblock rather than on this
-# bit. The bit was simply a lie, and a disk that could have been expanded later
-# -- by hand, or with --force -- was never asked again.
-new_sec="$(cgpt show -i "${partnum}" -s "${disk}" 2>/dev/null)"
-if [ -n "${cur_sec}" ] && [ -n "${new_sec}" ] && \
-   [ "${new_sec}" -gt "${cur_sec}" ]; then
-  mark_expanded
-  log "expanded ${state_dev} from ${cur_sec} to ${new_sec} sectors; \
-see /run/expand-stateful-early.log"
+if [ -n "${room}" ]; then
+  log "expanding ${state_dev} before it is mounted"
+  /usr/sbin/expand-partition.sh ${FORCE} -d "${state_dev}" \
+    > /run/expand-stateful-early.log 2>&1 || true
 else
-  # Nothing grew, so leave the bit clear and let a later boot ask again; the
-  # checks above cost two reads of the partition table. If cur_sec could not be
-  # read at all the comparison is not safe to make, and not marking is the side
-  # to err on -- the next boot's "anything to gain?" check will mark it if the
-  # partition does in fact already reach the end of the disk.
-  log "did not expand ${state_dev} (still ${cur_sec:-unknown} sectors); \
-see /run/expand-stateful-early.log"
+  # The partition is already as big as the disk allows while the filesystem
+  # inside it is not. That is an interrupted expansion, and expand-partition.sh
+  # would decline it ("nothing to expand") and leave it that way for good, so
+  # finish the job here instead.
+  log "${state_dev} is full size but its filesystem is not; resizing only"
+  resize_fs_to_partition > /run/expand-stateful-early.log 2>&1 || true
+fi
+
+# Judged by what the filesystem ended up covering, not by an exit status.
+# expand-partition.sh turns down a disk it will not touch -- a fixed one,
+# without --force -- by printing a message and exiting *zero*, so its status
+# cannot tell success from a polite refusal; and resize2fs against a stale
+# kernel partition size grows the filesystem to the old size and also succeeds.
+if fs_fills_partition; then
+  mark_expanded
+  log "the filesystem now fills ${state_dev} ($(fs_sectors) of ${cur_sec:-?} \
+sectors); see /run/expand-stateful-early.log"
+else
+  # Leave the bit clear and let a later boot finish it; the checks above cost
+  # two reads of the partition table and one of the superblock.
+  log "${state_dev} is not fully expanded yet (filesystem $(fs_sectors) of \
+${cur_sec:-?} sectors); see /run/expand-stateful-early.log"
 fi
