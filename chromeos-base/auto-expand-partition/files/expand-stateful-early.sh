@@ -114,13 +114,35 @@ if [ -n "${start_sec}" ] && [ -n "${cur_sec}" ] && [ -n "${disk_bytes}" ]; then
 fi
 
 log "expanding ${state_dev} before it is mounted"
-if /usr/sbin/expand-partition.sh ${FORCE} -d "${state_dev}" \
-     > /run/expand-stateful-early.log 2>&1; then
+/usr/sbin/expand-partition.sh ${FORCE} -d "${state_dev}" \
+  > /run/expand-stateful-early.log 2>&1
+
+# Whether that worked is decided by re-reading the partition table, not by the
+# exit status, because the exit status does not say. expand-partition.sh turns
+# down a disk it will not touch -- a fixed one, when --force was not given --
+# by printing "The system is not running from removable disk." and exiting
+# *zero*, which is its only explicit exit in the whole script. Believing that
+# status marked the partition expanded when nothing had been done, and since
+# this bit is precisely what stops the work being attempted again, such a disk
+# then never expanded for the rest of its life. The old code even said so in
+# the branch it could not reach.
+#
+# Nothing was ever mis-migrated by it, because the thinpool migration is gated
+# on the partition's real size and on the ext4 superblock rather than on this
+# bit. The bit was simply a lie, and a disk that could have been expanded later
+# -- by hand, or with --force -- was never asked again.
+new_sec="$(cgpt show -i "${partnum}" -s "${disk}" 2>/dev/null)"
+if [ -n "${cur_sec}" ] && [ -n "${new_sec}" ] && \
+   [ "${new_sec}" -gt "${cur_sec}" ]; then
   mark_expanded
-  log "expanded ${state_dev}; see /run/expand-stateful-early.log"
+  log "expanded ${state_dev} from ${cur_sec} to ${new_sec} sectors; \
+see /run/expand-stateful-early.log"
 else
-  # Most often this is expand-partition.sh declining a fixed disk, which is its
-  # job. Leave the bit clear: nothing was changed, and the checks above cost
-  # two reads of the partition table on the next boot.
-  log "did not expand ${state_dev}; see /run/expand-stateful-early.log"
+  # Nothing grew, so leave the bit clear and let a later boot ask again; the
+  # checks above cost two reads of the partition table. If cur_sec could not be
+  # read at all the comparison is not safe to make, and not marking is the side
+  # to err on -- the next boot's "anything to gain?" check will mark it if the
+  # partition does in fact already reach the end of the disk.
+  log "did not expand ${state_dev} (still ${cur_sec:-unknown} sectors); \
+see /run/expand-stateful-early.log"
 fi
