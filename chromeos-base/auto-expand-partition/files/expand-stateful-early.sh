@@ -130,7 +130,13 @@ resize_fs_to_partition() {
     echo "kernel reports $(dev_sectors) sectors, not ${want}; not resizing"
     return 1
   fi
-  resize2fs "${state_dev}"
+  # Journal first, then force -- see the long comment in expand-partition.sh.
+  # Without -f, resize2fs refuses any filesystem whose s_lastcheck predates its
+  # s_mtime, which every ChromeOS stateful partition does from its first mount
+  # onwards, so this is the difference between repairing the device and
+  # reporting that it could not be repaired.
+  e2fsck -p -E journal_only "${state_dev}" || true
+  resize2fs -f "${state_dev}"
 }
 
 if [ -z "${disk}" ] || [ ! -b "${state_dev}" ]; then

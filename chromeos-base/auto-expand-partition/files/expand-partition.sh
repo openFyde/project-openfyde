@@ -135,7 +135,25 @@ expand_partition() {
   echo "Done (kernel reports ${kern_sec} sectors)"
 
   echo "Resize filesystem on partition..."
-  if ! resize2fs $part; then
+  # Replay the journal, then force.
+  #
+  # Both are needed and neither is optional. resize2fs refuses outright -- "Please
+  # run 'e2fsck -f ... ' first" -- whenever s_lastcheck is older than s_mtime, and
+  # on a ChromeOS image s_lastcheck is a build-time constant (Nov 2009) while
+  # s_mtime becomes now the moment the partition is first mounted. So the
+  # unforced call works on the very first boot and never again: measured on the
+  # .191 USB, "Last checked: Thu Nov 19 11:00:00 2009" against "Last write time:
+  # Thu Oct  8 15:02:20 2026", refused without -f and resizing straight to the
+  # full 244161200 sectors with it.
+  #
+  # And a device that was powered off while stateful was mounted comes back with
+  # needs_recovery set, which -f alone does not deal with. e2fsck -p -E
+  # journal_only replays it and is a no-op on a clean filesystem.
+  #
+  # thinpool_migrator does exactly this before its own resize2fs, for the same
+  # reasons -- see ReplayExt4Journal() and ShrinkStatefulFilesystem().
+  e2fsck -p -E journal_only $part || true
+  if ! resize2fs -f $part; then
     echo "resize2fs failed on $part"
     return 1
   fi
