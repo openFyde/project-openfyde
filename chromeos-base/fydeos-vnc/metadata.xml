@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <maintainer type="project">
+    <email>bruce@fydeos.io</email>
+    <name>FydeOS</name>
+  </maintainer>
+  <longdescription lang="en">
+    FydeOS VNC server daemon.
+  </longdescription>
+</pkgmetadata>

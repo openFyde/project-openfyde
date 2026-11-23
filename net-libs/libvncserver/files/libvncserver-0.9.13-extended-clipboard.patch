@@ -1,0 +1,66 @@
+--- a/libvncserver/rfbserver.c
++++ b/libvncserver/rfbserver.c
+@@ -2619,40 +2619,49 @@
+ 
+ 	msg.cct.length = Swap32IfLE(msg.cct.length);
+ 
+-	/* uint32_t input is passed to malloc()'s size_t argument,
+-	 * to rfbReadExact()'s int argument, to rfbStatRecordMessageRcvd()'s int
+-	 * argument increased of sz_rfbClientCutTextMsg, and to setXCutText()'s int
+-	 * argument. Here we impose a limit of 1 MB so that the value fits
+-	 * into all of the types to prevent from misinterpretation and thus
+-	 * from accessing uninitialized memory (CVE-2018-7225) and also to
+-	 * prevent from a denial-of-service by allocating too much memory in
+-	 * the server. */
+-	if (msg.cct.length > 1<<20) {
+-	    rfbLog("rfbClientCutText: too big cut text length requested: %u B > 1 MB\n", (unsigned int)msg.cct.length);
++	/* FydeOS: Extended Clipboard (TigerVNC-compatible) reuses message
++	 * type 6 with the high bit of the length field set; the real byte
++	 * count is the absolute value of the signed length. */
++	{
++	int32_t fyd_signed_len = (int32_t)msg.cct.length;
++	uint32_t fyd_abs_len = (fyd_signed_len < 0)
++	    ? (uint32_t)(-(int64_t)fyd_signed_len)
++	    : msg.cct.length;
++	/* Cap at 10 MB to prevent DoS via huge alloc while leaving
++	 * headroom for the zlib payload. CVE-2018-7225 protection is
++	 * preserved by abs() + cap. */
++	if (fyd_abs_len > 10u<<20) {
++	    rfbLog("rfbClientCutText: too big cut text length requested: %u B > 10 MB\n",
++	           (unsigned int)fyd_abs_len);
+ 	    rfbCloseClient(cl);
+ 	    return;
+ 	}
+ 
+ 	/* Allow zero-length client cut text. */
+-	str = (char *)calloc(msg.cct.length ? msg.cct.length : 1, 1);
++	str = (char *)calloc(fyd_abs_len ? fyd_abs_len : 1, 1);
+ 	if (str == NULL) {
+ 		rfbLogPerror("rfbProcessClientNormalMessage: not enough memory");
+ 		rfbCloseClient(cl);
+ 		return;
+ 	}
+ 
+-	if ((n = rfbReadExact(cl, str, msg.cct.length)) <= 0) {
++	if (fyd_abs_len > 0 && (n = rfbReadExact(cl, str, fyd_abs_len)) <= 0) {
+ 	    if (n != 0)
+ 	        rfbLogPerror("rfbProcessClientNormalMessage: read");
+ 	    free(str);
+ 	    rfbCloseClient(cl);
+ 	    return;
+ 	}
+-	rfbStatRecordMessageRcvd(cl, msg.type, sz_rfbClientCutTextMsg+msg.cct.length, sz_rfbClientCutTextMsg+msg.cct.length);
++	rfbStatRecordMessageRcvd(cl, msg.type,
++	    sz_rfbClientCutTextMsg+fyd_abs_len,
++	    sz_rfbClientCutTextMsg+fyd_abs_len);
+ 	if(!cl->viewOnly) {
+-	    cl->screen->setXCutText(str, msg.cct.length, cl);
++	    /* Pass negative length to flag Extended Clipboard payload to
++	     * the callback; legacy Latin-1 keeps a positive length. */
++	    cl->screen->setXCutText(str, fyd_signed_len, cl);
+ 	}
+ 	free(str);
++	}
+ 
+         return;
+ 

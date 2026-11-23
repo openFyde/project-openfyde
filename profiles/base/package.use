@@ -1,3 +1,5 @@
 app-editors/vim cros_host
 chromeos-base/chromeos-login login_enable_crosh_sudo -apply_landlock_policy
 chromeos-base/oobe_config reven_oobe_config
+# fydeos-vnc requires VeNCrypt + TLS in libvncserver
+net-libs/libvncserver ssl

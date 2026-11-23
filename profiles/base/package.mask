@@ -1,0 +1,11 @@
+# fydeos-vnc needs the patched libvncserver from this overlay. Mask newer
+# upstream versions so an uprev fails visibly instead of silently dropping
+# the patches; port the patches forward before lifting.
+>net-libs/libvncserver-0.9.13-r1
+
+# fydeos-vnc needs the slimmed (numpy-free) websockify/novnc forks from
+# this overlay; a stock uprev would silently pull ~54 MiB of numpy back
+# into the image (and drop novnc's plain-password patch). Re-evaluate on
+# uprev: websockify >=0.11 dropped numpy upstream.
+>dev-python/websockify-0.10.0-r2
+>www-apps/novnc-1.2.0-r3

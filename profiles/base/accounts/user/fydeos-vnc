@@ -1,0 +1,6 @@
+user:fydeos-vnc
+uid:20225
+gid:20225
+gecos:FydeOS LAN VNC server daemon
+home:/dev/null
+shell:/bin/false
