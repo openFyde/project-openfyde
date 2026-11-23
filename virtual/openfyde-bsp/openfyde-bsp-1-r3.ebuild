@@ -33,6 +33,7 @@ RDEPEND="
     chromeos-base/openfyde-utils
     chromeos-base/fydeos-scripts-mounter
     chromeos-base/license-utils
+    chromeos-base/fydeos-vnc
     cellular? ( net-misc/modemmanager-fcc-unlock )
 "
 DEPEND="
